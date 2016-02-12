@@ -1,4 +1,4 @@
-%global version         0.2.1
+%global version         0.2.2
 %global pgmajorversion  9.4
 %global pgmimorversion  5
 %define pgbaseinstdir   /usr
