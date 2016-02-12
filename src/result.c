@@ -98,6 +98,7 @@ get_row(FunctionCallInfo fcinfo, PlxResult *plx_result, int nrow)
     StringInfoData  buf;
     PlxFn          *plx_fn = plx_result->plx_fn;
     PGresult       *pg_result = plx_result->pg_result;
+    Datum           ret;
 
     if (PQgetisnull(pg_result, nrow, 0))
     {
@@ -112,24 +113,25 @@ get_row(FunctionCallInfo fcinfo, PlxResult *plx_result, int nrow)
     PG_TRY();
     {
         if (plx_fn->is_binary)
-            return ReceiveFunctionCall(&plx_fn->ret_type->receive_fn,
-                                       &buf,
-                                       plx_fn->ret_type->receive_io_params,
-                                       plx_fn->ret_type_mod);
+            ret = ReceiveFunctionCall(&plx_fn->ret_type->receive_fn,
+                                      &buf,
+                                      plx_fn->ret_type->receive_io_params,
+                                      plx_fn->ret_type_mod);
         else
-            return InputFunctionCall(&plx_fn->ret_type->input_fn,
-                                     buf.data,
-                                     plx_fn->ret_type->receive_io_params,
-                                     plx_fn->ret_type_mod);
+            ret = InputFunctionCall(&plx_fn->ret_type->input_fn,
+                                    buf.data,
+                                    plx_fn->ret_type->receive_io_params,
+                                    plx_fn->ret_type_mod);
     }
     PG_CATCH();
     {
-        PQclear(plx_result->pg_result);
         plx_result_cache_delete(fcinfo);
+        PQclear(pg_result);
         pfree(plx_result);
         PG_RE_THROW();
     }
     PG_END_TRY();
+    return ret;
 }
 
 Datum
@@ -141,8 +143,8 @@ get_single_result(FunctionCallInfo fcinfo)
     plx_result = get_plx_result_or_due(fcinfo);
     /* code below will be never executed if pg_result not find */
     ret = get_row(fcinfo, plx_result, 0);
-    PQclear(plx_result->pg_result);
     plx_result_cache_delete(fcinfo);
+    PQclear(plx_result->pg_result);
     pfree(plx_result);
     return ret;
 }
@@ -167,8 +169,8 @@ get_next_row(FunctionCallInfo fcinfo)
         SRF_RETURN_NEXT(funcctx, get_row(fcinfo, plx_result, call_cntr));
     else
     {
-        PQclear(plx_result->pg_result);
         plx_result_cache_delete(fcinfo);
+        PQclear(plx_result->pg_result);
         pfree(plx_result);
         SRF_RETURN_DONE(funcctx);
     }
