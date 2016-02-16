@@ -287,7 +287,7 @@ compile_plx_fn(FunctionCallInfo fcinfo, HeapTuple proc_tuple, bool is_validate)
     if (is_validate)
         return plx_fn;
 
-    plx_fn->is_binary = 0; // fixme надо делать 1 и сбрасывать, если не получится отправить в бинарном формате
+    plx_fn->is_binary = 0; // fixme try to use 1 and text only if binary failed
     plx_fn->is_untyped_record = is_fn_returns_dynamic_record(proc_tuple);
     if (!plx_fn->run_query)
         plx_fn->run_query = create_plx_query_from_plx_fn(plx_fn);

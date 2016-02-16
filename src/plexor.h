@@ -29,7 +29,8 @@
 #include <miscadmin.h>
 
 /*
-longest string of {auto commit | {read committed | serializable } [read write | read only] [ [ not ] deferrable] }
+longest string of {auto commit | {read committed | serializable } \
+    [read write | read only] [ [ not ] deferrable] }
 is "read committed read write not deferrable" (42 chars)
 */
 #define MAX_ISOLATION_LEVEL_LEN 42
@@ -119,39 +120,37 @@ typedef struct PlxFn
     int             anode;                   /* argument index that contain node number
                                                 (RUN_ON_ANODE)                             */
     PlxQuery       *hash_query;              /* query to find node to run on (RUN_ON_HASH) */
-    PlxQuery       *run_query;
-    PlxType       **arg_types;
-    char          **arg_names;
-    int             nargs;
-    PlxType        *ret_type;
-    int             ret_type_mod;
-    bool            is_binary;
-    bool            is_untyped_record;       /* return type is untyped record */
-    TupleStamp      stamp;
+    PlxQuery       *run_query;               /* query that will be run on node             */
+    PlxType       **arg_types;               /* plexor function arguments types            */
+    char          **arg_names;               /* plexor function arguments names            */
+    int             nargs;                   /* plexor function arguments count            */
+    PlxType        *ret_type;                /* plexor function return type                */
+    int             ret_type_mod;            /* tdtypmod for record or -1                  */
+    bool            is_binary;               /* use binary fotmat to transfer values       */
+    bool            is_untyped_record;       /* return type is untyped record              */
+    TupleStamp      stamp;                   /* stamp to determinate function upadte       */
 } PlxFn;
 
 typedef struct PlxResult
 {
-    PlxFn          *plx_fn;
-    PGresult       *pg_result;
+    PlxFn          *plx_fn;                  /* plexor function the result is user for     */
+    PGresult       *pg_result;               /* result from node                           */
 } PlxResult;
 
 typedef struct PlxConn
 {
-    PlxCluster     *plx_cluster;
-    PGconn         *pq_conn;
-    char           *dsn;
-    int             xlevel;                  /* transaction nest level */
-    time_t          connect_time;
+    PlxCluster     *plx_cluster;             /* cluster date                               */
+    PGconn         *pq_conn;                 /* connection to node                         */
+    char           *dsn;                     /* node dns                                   */
+    int             xlevel;                  /* transaction nest level                     */
+    time_t          connect_time;            /* time at which connection was opened        */
 } PlxConn;
 
 /* Structure to keep plx_conn in HTAB's context. */
 typedef struct PlxConnHashEntry
 {
-    /* Key value. Must be at the start */
-    char            key[MAX_DSN_LEN];
-    /* Pointer to connection data */
-    PlxConn        *plx_conn;
+    char            key[MAX_DSN_LEN];        /* Key value. Must be at the start */
+    PlxConn        *plx_conn;                /* Pointer to connection data */
 } PlxConnHashEntry;
 
 
