@@ -30,16 +30,17 @@ PlxQuery *
 create_plx_query_from_plx_fn(PlxFn *plx_fn)
 {
     PlxQuery *plx_q = new_plx_query(plx_fn->mctx);
+    int       i;
 
     appendStringInfo(plx_q->sql, "%s", plx_fn->name);
     appendStringInfo(plx_q->sql, "(");
-    for (int i = 1; i <= plx_fn->nargs; i++)
+    for (i = 1; i <= plx_fn->nargs; i++)
         appendStringInfo(plx_q->sql, "$%d%s", i, i < plx_fn->nargs ? "," : "");
     appendStringInfo(plx_q->sql, ")");
 
     plx_q->plx_fn_arg_indexes = MemoryContextAllocZero(plx_fn->mctx,
                                                        sizeof(int) * plx_fn->nargs);
-    for (int i = 0; i < plx_fn->nargs; i++)
+    for (i = 0; i < plx_fn->nargs; i++)
         plx_q->plx_fn_arg_indexes[i] = i;
     plx_q->nargs = plx_fn->nargs;
 

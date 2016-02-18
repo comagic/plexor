@@ -31,6 +31,7 @@ plx_startup_init(void)
 static int
 get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
 {
+    PlxQuery   *plx_q = plx_fn->hash_query;
     int         err;
     SPIPlanPtr  plan;
     Oid         types[FUNC_MAX_ARGS];
@@ -38,12 +39,12 @@ get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
     char        arg_nulls[FUNC_MAX_ARGS];
     Datum       val;
     bool        isnull;
-    PlxQuery   *plx_q = plx_fn->hash_query;
+    int         i;
 
     if ((err = SPI_connect()) != SPI_OK_CONNECT)
         plx_error(plx_fn, "SPI_connect: %s", SPI_result_code_string(err));
 
-    for (int i = 0; i < plx_q->nargs; i++)
+    for (i = 0; i < plx_q->nargs; i++)
     {
         int idx = plx_q->plx_fn_arg_indexes[i];
 

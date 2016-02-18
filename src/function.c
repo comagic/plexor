@@ -190,6 +190,7 @@ fill_plx_fn_arg_types(PlxFn* plx_fn, HeapTuple proc_tuple)
     char          *modes = NULL;
     int            nargs;
     MemoryContext  old_ctx;
+    int            i;
 
     nargs = get_func_arg_info(proc_tuple, &types, &names, &modes);
     plx_fn->nargs = 0;
@@ -200,7 +201,7 @@ fill_plx_fn_arg_types(PlxFn* plx_fn, HeapTuple proc_tuple)
     MemoryContextSwitchTo(old_ctx);
 
 
-    for (int i = 0; i < nargs; i++)
+    for (i = 0; i < nargs; i++)
     {
         char mode = modes ? modes[i] : PROARGMODE_IN;
         switch (mode)
@@ -299,9 +300,11 @@ compile_plx_fn(FunctionCallInfo fcinfo, HeapTuple proc_tuple, bool is_validate)
 static bool
 is_plx_fn_todate(PlxFn *plx_fn, HeapTuple proc_tuple)
 {
+    int i;
+
     if (!plx_check_stamp(&(plx_fn->stamp), proc_tuple))
         return false;
-    for (int i = 0; i < plx_fn->nargs; i++)
+    for (i = 0; i < plx_fn->nargs; i++)
         if (!is_plx_type_todate(plx_fn->arg_types[i]))
             return false;
     if (!is_plx_type_todate(plx_fn->ret_type))
@@ -312,6 +315,8 @@ is_plx_fn_todate(PlxFn *plx_fn, HeapTuple proc_tuple)
 void
 delete_plx_fn(PlxFn *plx_fn, bool is_cache_delete)
 {
+    int i;
+
     if (plx_fn->name)
         pfree(plx_fn->name);
     if (plx_fn->cluster_name)
@@ -322,13 +327,13 @@ delete_plx_fn(PlxFn *plx_fn, bool is_cache_delete)
         delete_plx_query(plx_fn->run_query);
     if (plx_fn->arg_types)
     {
-        for (int i = 0; i < plx_fn->nargs; i++)
+        for (i = 0; i < plx_fn->nargs; i++)
             pfree(plx_fn->arg_types[i]);
         pfree(plx_fn->arg_types);
     }
     if (plx_fn->arg_names)
     {
-        for (int i = 0; i < plx_fn->nargs; i++)
+        for (i = 0; i < plx_fn->nargs; i++)
             pfree(plx_fn->arg_names[i]);
         pfree(plx_fn->arg_names);
     }

@@ -189,6 +189,7 @@ create_fn_args(PlxFn*              plx_fn,
                int               **arg_fmts)
 {
     PlxQuery  *plx_q = plx_fn->run_query;
+    int        i;
 
     (* args)     = palloc0(sizeof(char *) * plx_q->nargs);
     (* arg_lens) = palloc0(sizeof(int)    * plx_q->nargs);
@@ -197,7 +198,7 @@ create_fn_args(PlxFn*              plx_fn,
     if (plx_fn->is_binary)
     {
         bytea *bin;
-        for (int i = 0; i < plx_q->nargs; i++)
+        for (i = 0; i < plx_q->nargs; i++)
         {
             int idx = plx_q->plx_fn_arg_indexes[i];
 
@@ -209,9 +210,10 @@ create_fn_args(PlxFn*              plx_fn,
     }
     else
     {
-        for (int i = 0; i < plx_q->nargs; i++)
+        for (i = 0; i < plx_q->nargs; i++)
         {
             int idx = plx_q->plx_fn_arg_indexes[i];
+
             if (PG_ARGISNULL(idx))
                 (* args)[i] = NULL;
             else
@@ -230,11 +232,12 @@ get_dymanic_record_fields(PlxFn *plx_fn, FunctionCallInfo fcinfo)
     StringInfo buf;
     Oid        oid;
     TupleDesc  tuple_desc;
+    int        i;
 
     get_call_result_type(fcinfo, &oid, &tuple_desc);
 
     buf = makeStringInfo();
-    for (int i = 0; i < tuple_desc->natts; i++)
+    for (i = 0; i < tuple_desc->natts; i++)
     {
         Form_pg_attribute a;
         HeapTuple         type_tuple;

@@ -10,14 +10,14 @@ EXT_SQL     = sql/$(EXTENSION)--$(EXT_VERSION).sql
 INCLUDES    = src/plexor.h
 
 SRCS        = src/plexor.c \
-			  src/fdw_validator.c \
+              src/fdw_validator.c \
               src/cluster.c \
               src/connection.c \
               src/type.c \
               src/function.c \
               src/result.c \
               src/transaction.c \
-		      src/execute.c \
+              src/execute.c \
               src/query.c
 OBJS        = src/scanner.o src/parser.tab.o $(SRCS:.c=.o)
 EXTRA_CLEAN = src/scanner.[ch] src/parser.tab.[ch]
@@ -30,7 +30,7 @@ DATA_built  = $(EXT_SQL)
 
 SHLIB_LINK = -L$(PQLIB) -lpq
 
-PG_CPPFLAGS = -std=c99
+#PG_CPPFLAGS = -std=c89
 
 PG_CONFIG   = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
