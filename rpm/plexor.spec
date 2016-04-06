@@ -4,7 +4,7 @@
 %define pgbaseinstdir   /usr
 %global oname           plexor
 
-Summary:   Plexor - language for implementing MED in PostgreSQL
+Summary:   Plexor - remote function call PL language
 Name:      %{oname}
 Version:   %{version}
 Release:   1%{?dist}
@@ -17,7 +17,7 @@ BuildRequires: postgresql-devel >= %{pgmajorversion}.%{pgmimorversion} flex >= 2
 Requires:      postgresql >= %{pgmajorversion}.%{pgmimorversion}
 
 %description
-Plexor - language for implementing MED in PostgreSQL
+Plexor - remote function call PL language
 
 %prep
 %setup -q -n %{oname}-%{version}
