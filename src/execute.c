@@ -45,11 +45,11 @@ execute_init(void)
 static void
 pg_result_error(PGresult *pg_result)
 {
-    const char *diag_sqlstate = PQresultErrorField(pg_result, PG_DIAG_SQLSTATE);
-    const char *diag_primary  = PQresultErrorField(pg_result, PG_DIAG_MESSAGE_PRIMARY);
-    const char *diag_detail   = PQresultErrorField(pg_result, PG_DIAG_MESSAGE_DETAIL);
-    const char *diag_context  = PQresultErrorField(pg_result, PG_DIAG_CONTEXT);
-    const char *diag_hint     = PQresultErrorField(pg_result, PG_DIAG_MESSAGE_HINT);
+    const char *diag_sqlstate = mctx_strcpy(CurrentMemoryContext, PQresultErrorField(pg_result, PG_DIAG_SQLSTATE));
+    const char *diag_primary  = mctx_strcpy(CurrentMemoryContext, PQresultErrorField(pg_result, PG_DIAG_MESSAGE_PRIMARY));
+    const char *diag_detail   = mctx_strcpy(CurrentMemoryContext, PQresultErrorField(pg_result, PG_DIAG_MESSAGE_DETAIL));
+    const char *diag_context  = mctx_strcpy(CurrentMemoryContext, PQresultErrorField(pg_result, PG_DIAG_CONTEXT));
+    const char *diag_hint     = mctx_strcpy(CurrentMemoryContext, PQresultErrorField(pg_result, PG_DIAG_MESSAGE_HINT));
     int         sqlstate;
 
     if (diag_sqlstate)
@@ -65,7 +65,7 @@ pg_result_error(PGresult *pg_result)
     ereport(ERROR,
             (errcode(sqlstate),
              errmsg("Remote error: %s", diag_primary),
-             diag_detail  ? errdetail("Remote detail: %s", diag_detail) : 0,
+             diag_detail ? errdetail("Remote detail: %s", diag_detail) : 0,
              diag_hint ? errhint("Remote hint: %s", diag_hint) : 0,
              diag_context ? errcontext("Remote context: %s", diag_context) : 0));
 }

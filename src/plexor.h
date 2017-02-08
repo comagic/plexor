@@ -94,7 +94,10 @@ plx_check_stamp(TupleStamp *stamp, HeapTuple tuple)
 static inline char *
 mctx_strcpy(MemoryContext mctx, const char *s)
 {
-    int   len = strlen(s) + 1;
+    int len;
+    if (s == NULL)
+        return NULL;
+    len = strlen(s) + 1;
     return memcpy(MemoryContextAlloc(mctx, len), s, len);
 }
 
