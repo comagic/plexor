@@ -1,13 +1,13 @@
-%global version         0.2.2
-%global pgmajorversion  9.4
-%global pgmimorversion  5
+%global version         0.3.0
+%global pgmajorversion  9.6
+%global pgmimorversion  1
 %define pgbaseinstdir   /usr
 %global oname           plexor
 
 Summary:   Plexor - remote function call PL language
 Name:      %{oname}
 Version:   %{version}
-Release:   1%{?dist}
+Release:   2%{?dist}
 Group:     Applications/Databases
 License:   BSD
 Source0:   %{oname}-%{version}.tar.gz
