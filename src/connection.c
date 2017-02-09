@@ -126,7 +126,7 @@ get_user(PlxCluster *plx_cluster)
         if (strcmp(def->defname, "user") == 0)
             return strVal(def->arg);
     }
-    return GetUserNameFromId(GetUserId());
+    return GetUserNameFromId(GetUserId(), false);
 }
 
 static StringInfo
@@ -152,7 +152,7 @@ get_dsn(PlxCluster *plx_cluster, const char *dsn)
             appendStringInfo(buf, " password=%s", strVal(def->arg));
     }
     if (!got_user)
-        appendStringInfo(buf, " user=%s", GetUserNameFromId(GetUserId()));
+        appendStringInfo(buf, " user=%s", GetUserNameFromId(GetUserId(), false));
     return buf;
 }
 
