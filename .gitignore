@@ -1,0 +1,9 @@
+*.swp
+*.o
+*.so
+sql/plexor--0.1.sql
+src/parser.tab.c
+src/parser.tab.h
+src/scanner.c
+src/scanner.h
+
