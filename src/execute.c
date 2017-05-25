@@ -209,7 +209,7 @@ plx_send_query(PlxFn    *plx_fn,
                            arg_fmts,
                            plx_fn->is_binary))
     {
-        char *msg = psprintf("%s", PQerrorMessage(plx_conn->pq_conn));
+        char *msg = pstrdup(PQerrorMessage(plx_conn->pq_conn));
         delete_plx_conn(plx_conn);
         plx_error(plx_fn,
           "failed to send query %s %s", sql, msg);
