@@ -330,11 +330,14 @@ Datum
 remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo)
 {
     PGresult *pg_result;
+    Datum     result;
 
     remote_execute(plx_conn, plx_fn, fcinfo);
     pg_result = get_pg_result(plx_fn, plx_conn);
 
-    return get_row(fcinfo, plx_fn, pg_result, 0);
+    result = get_row(fcinfo, plx_fn, pg_result, 0);
+    PQclear(pg_result);
+    return result;
 }
 
 void
