@@ -65,6 +65,7 @@ is "read committed read write not deferrable" (42 chars)
 */
 #define MAX_ISOLATION_LEVEL_LEN 42
 #define MAX_DSN_LEN 1024
+#define MAX_NODES 100
 #define MAX_RESULTS_PER_EXPR 128
 #define MAX_CONNECTIONS 128
 #define TYPED_SQL_TMPL "select %s"
@@ -104,12 +105,12 @@ mctx_strcpy(MemoryContext mctx, const char *s)
 
 typedef struct PlxCluster
 {
-    Oid             oid;                     /* foreign server OID  */
-    char            name[NAMEDATALEN];       /* foreign server name */
+    Oid             oid;                            /* foreign server OID  */
+    char            name[NAMEDATALEN];              /* foreign server name */
     char           *isolation_level;
     int             connection_lifetime;
-    char            nodes[100][MAX_DSN_LEN]; /* node DSNs           */
-    int             nnodes;                  /* nodes count         */
+    char            nodes[MAX_NODES][MAX_DSN_LEN];  /* node DSNs           */
+    int             nnodes;                         /* nodes count         */
 } PlxCluster;
 
 
