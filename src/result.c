@@ -57,20 +57,16 @@ get_row(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result, int nrow)
     StringInfoData  buf;
     Datum           ret;
 
-    if (PQgetisnull(pg_result, nrow, 0))
-    {
-        fcinfo->isnull = true;
-        return (Datum)NULL;
-    }
-    else
-        fcinfo->isnull = false;
-
-    setFixedStringInfo(&buf,
-                       PQgetvalue(pg_result, nrow, 0),
-                       PQgetlength(pg_result, nrow, 0));
-
     PG_TRY();
     {
+        fcinfo->isnull = !PQntuples(pg_result) || PQgetisnull(pg_result, nrow, 0);
+        if (fcinfo->isnull)
+            return (Datum) NULL;
+
+        setFixedStringInfo(&buf,
+                           PQgetvalue(pg_result, nrow, 0),
+                           PQgetlength(pg_result, nrow, 0));
+
         if (plx_fn->is_binary)
             ret = ReceiveFunctionCall(&plx_fn->ret_type->receive_fn,
                                       &buf,
