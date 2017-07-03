@@ -175,6 +175,7 @@ typedef struct PlxConn
 {
     PlxCluster     *plx_cluster;             /* cluster date                               */
     PGconn         *pq_conn;                 /* connection to node                         */
+    int             nnode;                   /* node number                                */
     char           *dsn;                     /* node dns                                   */
     int             xlevel;                  /* transaction nest level                     */
     time_t          connect_time;            /* time at which connection was opened        */
