@@ -1,0 +1,5 @@
+*.o
+src/parser.tab.*
+src/scanner.*
+plexor.so
+sql/plexor--0.1.sql
