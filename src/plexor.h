@@ -136,11 +136,12 @@ typedef struct PlxQuery
 
 typedef enum RunOnType
 {
-    RUN_ON_HASH  = 1,                        /* node returned by hash function         */
-    RUN_ON_NNODE = 2,                        /* exact node number                      */
-    RUN_ON_ANY   = 3,                        /* decide randomly during runtime         */
-    RUN_ON_ANODE = 4,                        /* get node number from function argument */
-    RUN_ON_ALL   = 5,                        /* return all nodes                       */
+    RUN_ON_HASH         = 1,                 /* node returned by hash function         */
+    RUN_ON_NNODE        = 2,                 /* exact node number                      */
+    RUN_ON_ANY          = 3,                 /* decide randomly during runtime         */
+    RUN_ON_ANODE        = 4,                 /* get node number from function argument */
+    RUN_ON_ALL          = 5,                 /* return all nodes (for retset)          */
+    RUN_ON_ALL_COALESCE = 6,                 /* return all nodes (for single)          */
 } RunOnType;
 
 typedef struct PlxFn

@@ -81,7 +81,7 @@ plexor_yyerror(const char *fmt, ...)
 
 %name-prefix "plexor_yy"
 
-%token <str> CLUSTER RUN ON NUMBER ANY ALL
+%token <str> CLUSTER RUN ON NUMBER ANY ALL COALESCE
 %token <str> IDENT FNCALL ',' ')'
 
 // %printer { elog(NOTICE, "IDENT %s", $$); } IDENT
@@ -132,6 +132,7 @@ run_arg_token: IDENT { append_plx_query_arg_index(xfunc->run_query, xfunc, $1); 
 on_spec : hash_func hash_args_token_list { xfunc->run_on = RUN_ON_HASH; }
         | ANY                            { xfunc->run_on = RUN_ON_ANY; }
         | ALL                            { xfunc->run_on = RUN_ON_ALL; }
+        | ALL COALESCE                   { xfunc->run_on = RUN_ON_ALL_COALESCE; }
         | NUMBER                         { xfunc->run_on = RUN_ON_NNODE;
                                            xfunc->nnode = atoi($1); }
         | IDENT                          { xfunc->run_on = RUN_ON_ANODE;

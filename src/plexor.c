@@ -132,9 +132,22 @@ single_execute(FunctionCallInfo fcinfo)
     PlxCluster *plx_cluster = NULL;
     PlxConn    *plx_conn    = NULL;
     PlxFn      *plx_fn      = NULL;
+    int         i;
 
     plx_fn = get_plx_fn(fcinfo);
     plx_cluster = get_plx_cluster(plx_fn->cluster_name);
+    if (plx_fn->run_on == RUN_ON_ALL_COALESCE)
+    {
+        Datum result;
+        for (i = 0; i < plx_cluster->nnodes; i++)
+        {
+            plx_conn = get_plx_conn(plx_cluster, i);
+            result = remote_single_execute(plx_conn, plx_fn, fcinfo);
+            if (!fcinfo->isnull)
+                return result;
+        }
+        return result;
+    }
     plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
     return remote_single_execute(plx_conn, plx_fn, fcinfo);
 }

@@ -349,7 +349,7 @@ remote_retset_execute(PlxConn *plx_conn,
 
     remote_execute(plx_conn, plx_fn, fcinfo);
 
-    // funcctx is created here but for futher work see result.c:get_next_row()
+    /* funcctx is created here but for futher work see result.c:get_next_row() */
     if (is_first_call)
         funcctx = SRF_FIRSTCALL_INIT();
     else
