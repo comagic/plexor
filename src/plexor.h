@@ -165,12 +165,6 @@ typedef struct PlxFn
     TupleStamp      stamp;                   /* stamp to determinate function upadte       */
 } PlxFn;
 
-typedef struct PlxResult
-{
-    PlxFn          *plx_fn;                  /* plexor function the result is user for     */
-    PGresult       *pg_result;               /* result from node                           */
-} PlxResult;
-
 typedef struct PlxConn
 {
     PlxCluster     *plx_cluster;             /* cluster date                               */
@@ -180,6 +174,13 @@ typedef struct PlxConn
     int             xlevel;                  /* transaction nest level                     */
     time_t          connect_time;            /* time at which connection was opened        */
 } PlxConn;
+
+typedef struct PlxResult
+{
+    PlxFn          *plx_fn;                  /* plexor function the result is user for     */
+    PGresult       *pg_result;               /* result from node                           */
+    PlxConn        *plx_conn;                /* pointer to external connection             */
+} PlxResult;
 
 /* Structure to keep plx_conn in HTAB's context. */
 typedef struct PlxConnHashEntry
@@ -219,10 +220,8 @@ int    plx_fn_get_arg_index(PlxFn *plx_fn, const char *name);
 
 
 /* result.c */
-void  plx_result_cache_init(void);
-void  plx_result_insert_cache(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result);
-void  set_single_result(PlxFn *plx_fn, PGresult* pg_result);
-Datum get_single_result(FunctionCallInfo fcinfo);
+PlxResult* new_plx_result(PlxConn *plx_conn, PlxFn *plx_fn, PGresult *pg_result, MemoryContext mctx);
+Datum get_row(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result, int nrow);
 Datum get_next_row(FunctionCallInfo fcinfo);
 
 
@@ -244,8 +243,10 @@ void plx_error_with_errcode(PlxFn *plx_fn, int err_code, const char *fmt, ...)
 void plexor_yyerror(const char *fmt, ...)
 	__attribute__((format(PG_PRINTF_ATTRIBUTE, 1, 2)));
 
+/* execute.c */
 void execute_init(void);
-void remote_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
+Datum remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
+void remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
 
 
 /* scanner.l */

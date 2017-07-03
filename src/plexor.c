@@ -53,7 +53,6 @@ plx_startup_init(void)
     plx_cluster_cache_init();
     plx_conn_cache_init();
     plx_fn_cache_init();
-    plx_result_cache_init();
     execute_init();
 
     initialized = true;
@@ -97,25 +96,45 @@ get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
     return DatumGetInt32(val);
 }
 
+static PlxConn*
+select_plx_conn(FunctionCallInfo fcinfo, PlxCluster *plx_cluster, PlxFn *plx_fn)
+{
+    if (plx_fn->run_on == RUN_ON_HASH)
+        return get_plx_conn(plx_cluster, get_nnode(plx_fn, fcinfo));
+    else if (plx_fn->run_on == RUN_ON_NNODE)
+        return get_plx_conn(plx_cluster, plx_fn->nnode);
+    else if (plx_fn->run_on == RUN_ON_ANODE)
+        return get_plx_conn(plx_cluster, PG_GETARG_DATUM(plx_fn->anode));
+
+    plx_error(plx_fn, "failed to run on %d", plx_fn->run_on);
+    return NULL;
+}
+
+
 static void
-execute(FunctionCallInfo fcinfo)
+retset_execute(FunctionCallInfo fcinfo)
 {
     PlxCluster *plx_cluster = NULL;
     PlxConn    *plx_conn    = NULL;
     PlxFn      *plx_fn      = NULL;
 
-    plx_startup_init();
     plx_fn = get_plx_fn(fcinfo);
     plx_cluster = get_plx_cluster(plx_fn->cluster_name);
-    if (plx_fn->run_on == RUN_ON_HASH)
-        plx_conn = get_plx_conn(plx_cluster, get_nnode(plx_fn, fcinfo));
-    else if (plx_fn->run_on == RUN_ON_NNODE)
-        plx_conn = get_plx_conn(plx_cluster, plx_fn->nnode);
-    else if (plx_fn->run_on == RUN_ON_ANODE)
-        plx_conn = get_plx_conn(plx_cluster, PG_GETARG_DATUM(plx_fn->anode));
-    else
-        plx_error(plx_fn, "failed to run on %d", plx_fn->run_on);
-    remote_execute(plx_conn, plx_fn, fcinfo);
+    plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
+    return remote_retset_execute(plx_conn, plx_fn, fcinfo);
+}
+
+static Datum
+single_execute(FunctionCallInfo fcinfo)
+{
+    PlxCluster *plx_cluster = NULL;
+    PlxConn    *plx_conn    = NULL;
+    PlxFn      *plx_fn      = NULL;
+
+    plx_fn = get_plx_fn(fcinfo);
+    plx_cluster = get_plx_cluster(plx_fn->cluster_name);
+    plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
+    return remote_single_execute(plx_conn, plx_fn, fcinfo);
 }
 
 Datum
@@ -124,17 +143,15 @@ plexor_call_handler(PG_FUNCTION_ARGS)
     if (CALLED_AS_TRIGGER(fcinfo))
         elog(ERROR, "plexor function can't be used as triggers");
 
+    plx_startup_init();
     if (fcinfo->flinfo->fn_retset)
     {
         if (SRF_IS_FIRSTCALL())
-            execute(fcinfo);
+            retset_execute(fcinfo);
         return get_next_row(fcinfo);
     }
     else
-    {
-        execute(fcinfo);
-        return get_single_result(fcinfo);
-    }
+        return single_execute(fcinfo);
 }
 
 Datum

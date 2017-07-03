@@ -311,7 +311,7 @@ prepare_execute(PlxFn              *plx_fn,
         appendStringInfo(*sql, TYPED_SQL_TMPL, plx_q->sql->data);
 }
 
-void
+static void
 remote_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo)
 {
     PlxQuery    *plx_q    = plx_fn->run_query;
@@ -324,6 +324,37 @@ remote_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo)
     prepare_execute(plx_fn, fcinfo, &sql, &args, &arg_lens, &arg_fmts);
     start_transaction(plx_conn);
     plx_send_query(plx_fn, plx_conn, sql->data, args, plx_q->nargs, arg_lens, arg_fmts);
-    /* code below will be never executed if pg_result is wrong */
-    plx_result_insert_cache(fcinfo, plx_fn, get_pg_result(plx_fn, plx_conn));
+}
+
+Datum
+remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo)
+{
+    PGresult *pg_result;
+
+    remote_execute(plx_conn, plx_fn, fcinfo);
+    pg_result = get_pg_result(plx_fn, plx_conn);
+
+    return get_row(fcinfo, plx_fn, pg_result, 0);
+}
+
+void
+remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo)
+{
+    FuncCallContext *funcctx;
+    PlxResult       *plx_result;
+    PGresult        *pg_result;
+
+
+    remote_execute(plx_conn, plx_fn, fcinfo);
+
+    if (SRF_IS_FIRSTCALL())
+        funcctx = SRF_FIRSTCALL_INIT();
+    else
+        funcctx = SRF_PERCALL_SETUP();
+
+    pg_result = get_pg_result(plx_fn, plx_conn);
+    plx_result = new_plx_result(plx_conn, plx_fn, pg_result, funcctx->multi_call_memory_ctx);
+    funcctx->user_fctx = plx_result;
+    funcctx->max_calls = PQntuples(plx_result->pg_result);
+    funcctx->call_cntr = 0;
 }
