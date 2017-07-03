@@ -338,16 +338,19 @@ remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo)
 }
 
 void
-remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo)
+remote_retset_execute(PlxConn *plx_conn,
+                      PlxFn *plx_fn,
+                      FunctionCallInfo fcinfo,
+                      bool is_first_call)
 {
     FuncCallContext *funcctx;
     PlxResult       *plx_result;
     PGresult        *pg_result;
 
-
     remote_execute(plx_conn, plx_fn, fcinfo);
 
-    if (SRF_IS_FIRSTCALL())
+    // funcctx is created here but for futher work see result.c:get_next_row()
+    if (is_first_call)
         funcctx = SRF_FIRSTCALL_INIT();
     else
         funcctx = SRF_PERCALL_SETUP();

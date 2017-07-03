@@ -97,6 +97,7 @@ cluster                { return CLUSTER; }
 run                    { return RUN;     }
 on                     { return ON;      }
 any                    { return ANY;     }
+all                    { return ALL;     }
 
     /* function call */
 {IDENT}{SPACE}*[(]     { BEGIN(args); yylval.str = yytext; return FNCALL; }

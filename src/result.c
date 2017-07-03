@@ -104,10 +104,19 @@ get_next_row(FunctionCallInfo fcinfo)
                                          plx_result->plx_fn,
                                          plx_result->pg_result,
                                          call_cntr));
-    else
+    PQclear(plx_result->pg_result);
+    if (plx_result->plx_fn->run_on == RUN_ON_ALL &&
+        plx_result->plx_conn->nnode + 1 < plx_result->plx_conn->plx_cluster->nnodes)
     {
-        PQclear(plx_result->pg_result);
+        PlxCluster *plx_cluster = plx_result->plx_conn->plx_cluster;
+        PlxFn      *plx_fn = plx_result->plx_fn;
+        PlxConn    *plx_conn = get_plx_conn(plx_cluster, plx_result->plx_conn->nnode + 1);
+
         pfree(plx_result);
-        SRF_RETURN_DONE(funcctx);
+        remote_retset_execute(plx_conn, plx_fn, fcinfo, false);
+        return get_next_row(fcinfo);
+
     }
+    pfree(plx_result);
+    SRF_RETURN_DONE(funcctx);
 }

@@ -140,6 +140,7 @@ typedef enum RunOnType
     RUN_ON_NNODE = 2,                        /* exact node number                      */
     RUN_ON_ANY   = 3,                        /* decide randomly during runtime         */
     RUN_ON_ANODE = 4,                        /* get node number from function argument */
+    RUN_ON_ALL   = 5,                        /* return all nodes                       */
 } RunOnType;
 
 typedef struct PlxFn
@@ -246,7 +247,7 @@ void plexor_yyerror(const char *fmt, ...)
 /* execute.c */
 void execute_init(void);
 Datum remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
-void remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
+void remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo, bool is_first_call);
 
 
 /* scanner.l */

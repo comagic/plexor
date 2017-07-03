@@ -105,6 +105,8 @@ select_plx_conn(FunctionCallInfo fcinfo, PlxCluster *plx_cluster, PlxFn *plx_fn)
         return get_plx_conn(plx_cluster, plx_fn->nnode);
     else if (plx_fn->run_on == RUN_ON_ANODE)
         return get_plx_conn(plx_cluster, PG_GETARG_DATUM(plx_fn->anode));
+    else if (plx_fn->run_on == RUN_ON_ALL)
+        return get_plx_conn(plx_cluster, 0);
 
     plx_error(plx_fn, "failed to run on %d", plx_fn->run_on);
     return NULL;
@@ -121,7 +123,7 @@ retset_execute(FunctionCallInfo fcinfo)
     plx_fn = get_plx_fn(fcinfo);
     plx_cluster = get_plx_cluster(plx_fn->cluster_name);
     plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
-    return remote_retset_execute(plx_conn, plx_fn, fcinfo);
+    return remote_retset_execute(plx_conn, plx_fn, fcinfo, true);
 }
 
 static Datum
