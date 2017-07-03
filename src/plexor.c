@@ -54,6 +54,7 @@ plx_startup_init(void)
     plx_conn_cache_init();
     plx_fn_cache_init();
     execute_init();
+    srand(time(NULL));
 
     initialized = true;
 }
@@ -105,6 +106,8 @@ select_plx_conn(FunctionCallInfo fcinfo, PlxCluster *plx_cluster, PlxFn *plx_fn)
         return get_plx_conn(plx_cluster, plx_fn->nnode);
     else if (plx_fn->run_on == RUN_ON_ANODE)
         return get_plx_conn(plx_cluster, PG_GETARG_DATUM(plx_fn->anode));
+    else if (plx_fn->run_on == RUN_ON_ANY)
+        return get_plx_conn(plx_cluster, rand() % plx_cluster->nnodes);
     else if (plx_fn->run_on == RUN_ON_ALL)
         return get_plx_conn(plx_cluster, 0);
 

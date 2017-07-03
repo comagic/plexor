@@ -57,6 +57,8 @@
 #include <funcapi.h>
 #include <libpq-fe.h>
 #include <miscadmin.h>
+#include <stdlib.h>
+#include <time.h>
 
 /*
 longest string of {auto commit | {read committed | serializable } \
