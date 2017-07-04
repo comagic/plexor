@@ -76,9 +76,14 @@ def test(path,
     for cycle in xrange(1, cycles + 1):
         cycle_start_time = time.time()
         checks = []
-        for n, query, expect_result in ((n, q['query'], q.get('result'))
+        for n, pre, query, expect_result in ((n,
+                                              q.get('pre'),
+                                              q['query'],
+                                              q.get('result'))
                                         for n, q in enumerate(queries)
                                         if not key or key in q['query']):
+            if pre:
+                execute(pre, dsn=dsn)
             query_start_time = time.time()
             result, is_ok = execute(query, dsn=dsn)
             if not is_ok:
