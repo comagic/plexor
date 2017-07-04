@@ -81,7 +81,6 @@ create or replace function test_return_null_in_typed_record(anode_id integer, ou
 returns setof record
     language plpythonu
     as $$
-
 return [{'id': None, 'name': 'yes'},
         {'id': 1, 'name': None}]
 $$;
@@ -107,6 +106,15 @@ returns integer
     as $$
 begin
     return anode_id;
+end;
+$$;
+
+create function test_all_coalesce()
+returns integer
+    language plpgsql
+    as $$
+begin
+    return null;
 end;
 $$;
 
@@ -178,7 +186,6 @@ create function test_typed_record(anode_id integer, out id integer, out name tex
 returns record
     language plpythonu
     as $$
-
 return {'id': 1, 'name': 'yes', 'dep': 'dev'}
 $$;
 
@@ -186,7 +193,6 @@ create function test_untyped_record(anode_id integer)
 returns record
     language plpythonu
     as $$
-
 return {'id': 1, 'name': 'yes'}
 $$;
 
@@ -210,4 +216,3 @@ begin
       select i from generate_series(1, 5) as i;
 end;
 $$;
-

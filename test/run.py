@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 
+import os
 import time
 import argparse
 import psycopg2
 
 
-def execute(query, connect=None, dsn=None):
+def execute(query, connect=None, dsn=None, is_autocommit=False):
     if connect:
         connect, is_close_connect = connect, False
     else:
         connect, is_close_connect = psycopg2.connect(dsn), True
+        connect.autocommit = is_autocommit
     cursor = connect.cursor()
     try:
         cursor.execute(query)
@@ -27,12 +29,45 @@ def execute(query, connect=None, dsn=None):
     return res
 
 
-def run(queries,
-        dsn=None,
-        cycles=1,
-        query_print_format=None,
-        cycle_print_format=None,
-        **kw):
+def get_queries(filename):
+    text = ''.join(l for l in open(filename) if not l.startswith('--'))
+    return (q for q in text.split('\n\n') if q)
+
+
+def ddl_execute(path, sql=None, script=None, **kw):
+    if sql:
+        execute(sql['sql'], dsn=sql['dsn'], is_autocommit=True)
+    if script:
+        for q in get_queries(os.path.join(path, script.get('script'))):
+            execute(q, dsn=script['dsn'], is_autocommit=True)
+
+
+def ddl(path, proxy, nodes, sql_field, script_field, **kw):
+    try:
+        ddl_execute(path,
+                    sql=proxy.get(sql_field),
+                    script=proxy.get(script_field))
+    except Exception as ex:
+        print ex
+    for node in nodes:
+        try:
+            ddl_execute(path,
+                    sql=node.get(sql_field),
+                    script=node.get(script_field))
+        except Exception as ex:
+            print ex
+
+def test(path,
+         test,
+         proxy,
+         cycles=1,
+         query_print_format=None,
+         cycle_print_format=None,
+         is_single_connect=True,
+         **kw):
+    dsn = test.get('dsn') or proxy.get('init', {}).get('dsn')
+    script_name = os.path.join(path, test['script'])
+    queries = eval(open(script_name).read())
     for cycle in xrange(1, cycles + 1):
         cycle_start_time = time.time()
         checks = []
@@ -67,47 +102,72 @@ def check_result(result, original):
     return result == original
 
 
+
+def run(is_init=False, is_test=False, is_final=False, **kw):
+    if is_init:
+        ddl(sql_field='init_sql', script_field='init', **kw)
+    if is_test:
+        test(**kw)
+    if is_final:
+        ddl(sql_field='final_sql', script_field='final', **kw)
+
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    arg_parser.add_argument('--dsn',
-                            default='dbname=proxy',
-                            help='DSN')
+    arg_parser.add_argument('config',
+                            help='test configuration file')
     arg_parser.add_argument('--cycles',
                             type=int,
                             default=1,
-                            help='number of cycles')
-    arg_parser.add_argument('--connect-per-execute',
-                            type=bool,
-                            default=False,
-                            help='make unique connect for every execute')
+                            help='cycles count')
     arg_parser.add_argument('--query-print-format',
-                            type=str,
-                            default='{query}',
-                            help='query execution output format')
+                            type=str)
     arg_parser.add_argument('--cycle-print-format',
-                            type=str,
-                            default='cycle {cycle:>2}: {check_stat}s',
-                            help='query execution output format')
-    arg_parser.add_argument('test',
-                            type=str,
-                            help='file with test queries')
+                            type=str)
+    arg_parser.add_argument('--single-connect',
+                            dest='is_single_connect',
+                            action='store_true',
+                            help='run all test in single connect')
+    arg_parser.add_argument('--no-single-connect',
+                            dest='is_single_connect',
+                            action='store_false',
+                            help='run all test in single connect')
+    arg_parser.set_defaults(is_single_connect=True)
+    arg_parser.add_argument('--init',
+                            dest='is_init',
+                            action='store_true',
+                            help='run init section')
+    arg_parser.add_argument('--no-init',
+                            dest='is_init',
+                            action='store_false',
+                            help='don\'t run init section')
+    arg_parser.set_defaults(is_init=True)
+    arg_parser.add_argument('--test',
+                            dest='is_test',
+                            action='store_true',
+                            help='run test section')
+    arg_parser.add_argument('--no-test',
+                            dest='is_test',
+                            action='store_false',
+                            help='don\'t run test section')
+    arg_parser.set_defaults(is_test=True)
+    arg_parser.add_argument('--final',
+                            dest='is_final',
+                            action='store_true',
+                            help='run final section')
+    arg_parser.add_argument('--no-final',
+                            dest='is_final',
+                            action='store_false',
+                            help='don\'t run final section')
+    arg_parser.set_defaults(is_final=True)
     args = arg_parser.parse_args()
 
-    queries = eval(open(args.__dict__.pop('test')).read())
-    run(queries, **args.__dict__)
-
-
-'''
-dropdb proxy &&
-dropdb node0 &&
-dropdb node1 &&
-createdb proxy &&
-createdb node0 &&
-createdb node1 &&
-psql -f test/init_proxy.sql proxy &&
-psql -f test/init_node.sql node0 &&
-psql -f test/init_node.sql node1 &&
-python test/run.py test/test.py --query-print-format='{check}: {query}' --cycle-print-format='{cycle}: {check_stat}' --cycles=100
-
-'''
+    config_name = args.__dict__.pop('config')
+    path = os.path.dirname(os.path.abspath(config_name))
+    config = eval(open(config_name).read())
+    config.update(path=path,
+                  **{k: v
+                     for k, v in args.__dict__.iteritems()
+                     if v is not None})
+    run(**config)

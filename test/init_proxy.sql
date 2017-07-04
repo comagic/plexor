@@ -2,8 +2,6 @@
 -- create extension if not exists plpgsql with schema pg_catalog;
 create extension if not exists plexor with schema pg_catalog;
 
-
-
 create server proxy foreign data wrapper plexor options (
     node_0 'dbname=node0 host=127.0.0.1 port=5432',
     node_1 'dbname=node1 host=127.0.0.1 port=5432',
@@ -217,4 +215,3 @@ returns setof integer
   cluster proxy;
   run on get_node(anode_id);
 $$;
-
