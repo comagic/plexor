@@ -22,7 +22,9 @@ def execute(query, connect=None, dsn=None, is_autocommit=False):
     try:
         cursor.execute(query)
     except:
+        print('execute failed: {}'.format(query))
         map(print, traceback.format_exc().splitlines())
+        return None, False
     finally:
         while connect.notices:
             print(connect.notices.pop(0))
@@ -34,7 +36,7 @@ def execute(query, connect=None, dsn=None, is_autocommit=False):
     connect.commit()
     if is_close_connect:
         connect.close()
-    return res
+    return res, True
 
 
 def get_queries(filename):
@@ -78,8 +80,10 @@ def test(path,
                                         for n, q in enumerate(queries)
                                         if not key or key in q['query']):
             query_start_time = time.time()
-            result = execute(query, dsn=dsn)
-            if expect_result:
+            result, is_ok = execute(query, dsn=dsn)
+            if not is_ok:
+                check = False
+            elif expect_result:
                 check = check_result(result, expect_result)
             else:
                 check = True
