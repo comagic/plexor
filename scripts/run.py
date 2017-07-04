@@ -61,6 +61,7 @@ def ddl(path, proxy, nodes, sql_field, script_field, **kw):
 def test(path,
          test,
          proxy,
+         key=None,
          cycles=1,
          query_print_format=None,
          cycle_print_format=None,
@@ -73,7 +74,8 @@ def test(path,
         cycle_start_time = time.time()
         checks = []
         for n, query, expect_result in ((n, q['query'], q.get('result'))
-                                        for n, q in enumerate(queries)):
+                                        for n, q in enumerate(queries)
+                                        if not key or key in q['query']):
             query_start_time = time.time()
             result = execute(query, dsn=dsn)
             if expect_result:
@@ -124,6 +126,9 @@ def main():
                             type=int,
                             default=1,
                             help='cycles count')
+    arg_parser.add_argument('--key', '-k',
+                            type=str,
+                            default=None)
     arg_parser.add_argument('--query-print-format',
                             type=str)
     arg_parser.add_argument('--cycle-print-format',
