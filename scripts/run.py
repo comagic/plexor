@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import os
 import time
 import argparse
 import psycopg2
+import traceback
 
 
 def execute(query, connect=None, dsn=None, is_autocommit=False):
@@ -15,9 +18,11 @@ def execute(query, connect=None, dsn=None, is_autocommit=False):
     cursor = connect.cursor()
     try:
         cursor.execute(query)
+    except:
+        map(print, traceback.format_exc().splitlines())
     finally:
         while connect.notices:
-            print connect.notices.pop(0),
+            print(connect.notices.pop(0))
     try:
         res = cursor.fetchall()
     except:
@@ -43,19 +48,11 @@ def ddl_execute(path, sql=None, script=None, **kw):
 
 
 def ddl(path, proxy, nodes, sql_field, script_field, **kw):
-    try:
-        ddl_execute(path,
-                    sql=proxy.get(sql_field),
-                    script=proxy.get(script_field))
-    except Exception as ex:
-        print ex
+    ddl_execute(path, sql=proxy.get(sql_field), script=proxy.get(script_field))
     for node in nodes:
-        try:
-            ddl_execute(path,
+        ddl_execute(path,
                     sql=node.get(sql_field),
                     script=node.get(script_field))
-        except Exception as ex:
-            print ex
 
 def test(path,
          test,
@@ -81,21 +78,23 @@ def test(path,
                 check = True
             checks.append(check)
             if query_print_format:
-                print query_print_format.format(
-                    query=query,
-                    n=n,
-                    cycle=cycle,
-                    result=result,
-                    check='T' if check else 'F',
-                    expect_result=expect_result,
-                    time=time.time() - query_start_time)
+                print(
+                    query_print_format.format(
+                        query=query,
+                        n=n,
+                        cycle=cycle,
+                        result=result,
+                        check='T' if check else 'F',
+                        expect_result=expect_result,
+                        time=time.time() - query_start_time))
         if cycle_print_format:
-            print cycle_print_format.format(
-                cycle=cycle,
-                check_stat='{}, {}'.format(
-                    'ok: {}'.format(checks.count(True)),
-                    'fail: {}'.format(checks.count(False))),
-                time=time.time() - cycle_start_time)
+            print(
+                cycle_print_format.format(
+                    cycle=cycle,
+                    check_stat='{}, {}'.format(
+                        'ok: {}'.format(checks.count(True)),
+                        'fail: {}'.format(checks.count(False))),
+                    time=time.time() - cycle_start_time))
 
 
 def check_result(result, original):
@@ -112,7 +111,7 @@ def run(is_init=False, is_test=False, is_final=False, **kw):
         ddl(sql_field='final_sql', script_field='final', **kw)
 
 
-if __name__ == '__main__':
+def main():
     arg_parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     arg_parser.add_argument('config',
@@ -171,3 +170,6 @@ if __name__ == '__main__':
                      for k, v in args.__dict__.iteritems()
                      if v is not None})
     run(**config)
+
+if __name__ == '__main__':
+    main()
