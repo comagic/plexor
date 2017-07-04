@@ -9,6 +9,7 @@ import psycopg2
 import traceback
 
 from jinja2 import Template
+from psycopg2.extras import RealDictCursor
 
 
 def execute(query, connect=None, dsn=None, is_autocommit=False):
@@ -17,7 +18,7 @@ def execute(query, connect=None, dsn=None, is_autocommit=False):
     else:
         connect, is_close_connect = psycopg2.connect(dsn), True
         connect.autocommit = is_autocommit
-    cursor = connect.cursor()
+    cursor = connect.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute(query)
     except:
