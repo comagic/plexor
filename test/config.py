@@ -22,7 +22,7 @@
             'init': {
                 'dsn': 'dbname=node0',
                 'script': 'init_node.sql',
-                'params': {},
+                'params': {'node': 0},
             },
             'final_sql': {
                 'sql': 'drop database node0',
@@ -37,7 +37,7 @@
             'init': {
                 'dsn': 'dbname=node1',
                 'script': 'init_node.sql',
-                'params': {},
+                'params': {'node': 1},
             },
             'final_sql': {
                 'sql': 'drop database node1',
@@ -52,7 +52,7 @@
             'init': {
                 'dsn': 'dbname=node2',
                 'script': 'init_node.sql',
-                'params': {},
+                'params': {'node': 2},
             },
             'final_sql': {
                 'sql': 'drop database node2',

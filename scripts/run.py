@@ -8,6 +8,8 @@ import argparse
 import psycopg2
 import traceback
 
+from jinja2 import Template
+
 
 def execute(query, connect=None, dsn=None, is_autocommit=False):
     if connect:
@@ -44,7 +46,9 @@ def ddl_execute(path, sql=None, script=None, **kw):
         execute(sql['sql'], dsn=sql['dsn'], is_autocommit=True)
     if script:
         for q in get_queries(os.path.join(path, script.get('script'))):
-            execute(q, dsn=script['dsn'], is_autocommit=True)
+            execute(Template(q).render(script.get('params', {})),
+                dsn=script['dsn'],
+                is_autocommit=True)
 
 
 def ddl(path, proxy, nodes, sql_field, script_field, **kw):
