@@ -126,7 +126,7 @@ retset_execute(FunctionCallInfo fcinfo)
     plx_fn = get_plx_fn(fcinfo);
     plx_cluster = get_plx_cluster(plx_fn->cluster_name);
     plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
-    return remote_retset_execute(plx_conn, plx_fn, fcinfo, true);
+    remote_retset_execute(plx_conn, plx_fn, fcinfo, true);
 }
 
 static Datum
