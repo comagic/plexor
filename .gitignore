@@ -4,4 +4,4 @@ plexor_test.egg-info
 src/parser.tab.*
 src/scanner.*
 plexor.so
-sql/plexor--0.1.sql
+sql/plexor--*.sql

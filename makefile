@@ -1,5 +1,5 @@
 EXTENSION   = plexor
-EXT_VERSION = 0.1
+EXT_VERSION = 2.1
 
 MODULE_big  = $(EXTENSION)
 
