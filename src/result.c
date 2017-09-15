@@ -57,12 +57,12 @@ get_row(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result, int nrow)
     StringInfoData  buf;
     Datum           ret;
 
+    fcinfo->isnull = !PQntuples(pg_result) || PQgetisnull(pg_result, nrow, 0);
+    if (fcinfo->isnull)
+        return (Datum) NULL;
+
     PG_TRY();
     {
-        fcinfo->isnull = !PQntuples(pg_result) || PQgetisnull(pg_result, nrow, 0);
-        if (fcinfo->isnull)
-            return (Datum) NULL;
-
         setFixedStringInfo(&buf,
                            PQgetvalue(pg_result, nrow, 0),
                            PQgetlength(pg_result, nrow, 0));
