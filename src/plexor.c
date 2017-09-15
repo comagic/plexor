@@ -110,6 +110,11 @@ select_plx_conn(FunctionCallInfo fcinfo, PlxCluster *plx_cluster, PlxFn *plx_fn)
         return get_plx_conn(plx_cluster, rand() % plx_cluster->nnodes);
     else if (plx_fn->run_on == RUN_ON_ALL)
         return get_plx_conn(plx_cluster, 0);
+    else if (plx_fn->run_on == RUN_ON_ALL_COALESCE)
+    {
+        plx_error(plx_fn, "using run on all coalesce deny for setof");
+	return NULL;
+    }
 
     plx_error(plx_fn, "failed to run on %d", plx_fn->run_on);
     return NULL;
@@ -188,6 +193,13 @@ plexor_validator(PG_FUNCTION_ARGS)
 
     plx_startup_init();
     plx_fn = compile_plx_fn(NULL, proc_tuple, true);
+    if (fcinfo->flinfo->fn_retset && plx_fn->run_on == RUN_ON_ALL_COALESCE)
+    {
+        delete_plx_fn(plx_fn, false);
+        ReleaseSysCache(proc_tuple);
+        elog(ERROR, "using run on all coalesce deny for setof");
+
+    }
     delete_plx_fn(plx_fn, false);
 
     ReleaseSysCache(proc_tuple);
