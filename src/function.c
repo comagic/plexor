@@ -276,6 +276,7 @@ fill_plx_fn_ret_type(PlxFn* plx_fn, FunctionCallInfo fcinfo)
     if (plx_fn->is_binary && !OidIsValid(&plx_fn->ret_type->oid))
         plx_fn->is_binary = 0;
     plx_fn->ret_type_mod = (oid == RECORDOID) ? tuple_desc->tdtypmod : -1;
+    plx_fn->is_return_void = oid == VOIDOID;
 }
 
 static void
@@ -320,7 +321,7 @@ compile_plx_fn(FunctionCallInfo fcinfo, HeapTuple proc_tuple, bool is_validate)
         return plx_fn;
 
     plx_fn->is_binary = 0; // fixme try to use 1 and text only if binary failed
-    plx_fn->is_untyped_record = is_fn_returns_dynamic_record(proc_tuple);
+    plx_fn->is_return_untyped_record = is_fn_returns_dynamic_record(proc_tuple);
     if (!plx_fn->run_query)
         plx_fn->run_query = create_plx_query_from_plx_fn(plx_fn);
     fill_plx_fn_ret_type(plx_fn, fcinfo);

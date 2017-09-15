@@ -165,7 +165,8 @@ typedef struct PlxFn
     PlxType        *ret_type;                /* plexor function return type                */
     int             ret_type_mod;            /* tdtypmod for record or -1                  */
     bool            is_binary;               /* use binary fotmat to transfer values       */
-    bool            is_untyped_record;       /* return type is untyped record              */
+    bool            is_return_untyped_record;/* return type is untyped record              */
+    bool            is_return_void;          /* return type is untyped record              */
     TupleStamp      stamp;                   /* stamp to determinate function upadte       */
 } PlxFn;
 

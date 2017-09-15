@@ -144,6 +144,16 @@ single_execute(FunctionCallInfo fcinfo)
 
     plx_fn = get_plx_fn(fcinfo);
     plx_cluster = get_plx_cluster(plx_fn->cluster_name);
+    if (plx_fn->run_on == RUN_ON_ALL && plx_fn->is_return_void)
+    {
+        for (i = 0; i < plx_cluster->nnodes; i++)
+        {
+            plx_conn = get_plx_conn(plx_cluster, i);
+            remote_single_execute(plx_conn, plx_fn, fcinfo);
+        }
+        fcinfo->isnull = true;
+        return (Datum) NULL;
+    }
     if (plx_fn->run_on == RUN_ON_ALL_COALESCE)
     {
         Datum result;

@@ -302,7 +302,7 @@ prepare_execute(PlxFn              *plx_fn,
     PlxQuery      *plx_q = plx_fn->run_query;
     create_fn_args(plx_fn, fcinfo, args, arg_lens, arg_fmts);
     *sql = makeStringInfo();
-    if (plx_fn->is_untyped_record)
+    if (plx_fn->is_return_untyped_record)
     {
         StringInfo buf = get_dymanic_record_fields(plx_fn, fcinfo);
         appendStringInfo(*sql, UNTYPED_SQL_TMPL, plx_q->sql->data, buf->data);
