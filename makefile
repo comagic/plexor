@@ -17,10 +17,11 @@ SRCS        = src/plexor.c \
               src/function.c \
               src/result.c \
               src/transaction.c \
+              src/parser.c \
               src/execute.c \
               src/query.c
-OBJS        = src/scanner.o src/parser.tab.o $(SRCS:.c=.o)
-EXTRA_CLEAN = src/scanner.[ch] src/parser.tab.[ch]
+OBJS        = $(SRCS:.c=.o)
+EXTRA_CLEAN =
 
 PQINCSERVER = $(shell $(PG_CONFIG) --includedir-server)
 PQINC = $(shell $(PG_CONFIG) --includedir)
@@ -42,18 +43,6 @@ include $(PGXS)
 FLEX := $(if $(FLEX),$(FLEX),flex)
 BISON := $(if $(BISON),$(BISON),bison)
 
-# parser rules
-src/scanner.o: src/parser.tab.h
-src/parser.tab.h: src/parser.tab.c
-src/parser.tab.c: src/parser.y
-	@mkdir -p src
-	$(BISON) -t -b src/parser -d $<
-
-src/parser.o: src/scanner.h
-src/scanner.h: src/scanner.c
-src/scanner.c: src/scanner.l
-	@mkdir -p src
-	$(FLEX) -o$@ --header-file=$(@:.c=.h) $<
 
 sql/plexor.sql: $(PLEXOR_SQL)
 	cat $^ > $@

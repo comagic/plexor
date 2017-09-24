@@ -60,6 +60,11 @@
 #include <stdlib.h>
 #include <time.h>
 
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+
+
 /*
 longest string of {auto commit | {read committed | serializable } \
     [read write | read only] [ [ not ] deferrable] }
@@ -219,7 +224,6 @@ PlxFn *compile_plx_fn(FunctionCallInfo fcinfo, HeapTuple proc_tuple, bool is_val
 PlxFn *get_plx_fn(FunctionCallInfo fcinfo);
 PlxFn *plx_fn_lookup_cache(Oid fn_oid);
 void   delete_plx_fn(PlxFn *plx_fn, bool is_cache_delete);
-void   fill_plx_fn_cluster_name(PlxFn* plx_fn, const char *cluster_name);
 void   fill_plx_fn_anode(PlxFn* plx_fn, const char *anode_name);
 int    plx_fn_get_arg_index(PlxFn *plx_fn, const char *name);
 
@@ -242,23 +246,17 @@ void start_transaction(PlxConn* plx_conn);
 
 /* plexor.c */
 void plx_error_with_errcode(PlxFn *plx_fn, int err_code, const char *fmt, ...)
-	__attribute__((format(PG_PRINTF_ATTRIBUTE, 3, 4)));
+     __attribute__((format(PG_PRINTF_ATTRIBUTE, 3, 4)));
 #define plx_error(func,...) plx_error_with_errcode((func), ERRCODE_INTERNAL_ERROR, __VA_ARGS__)
+#define plx_syntax_error(func,...) plx_error_with_errcode((func), ERRCODE_SYNTAX_ERROR , __VA_ARGS__)
 
-void plexor_yyerror(const char *fmt, ...)
-	__attribute__((format(PG_PRINTF_ATTRIBUTE, 1, 2)));
+
+/* parser.c */
+void parse(PlxFn *plx_fn, const char *body, int len);
 
 /* execute.c */
 void execute_init(void);
 Datum remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
 void remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo, bool is_first_call);
-
-
-/* scanner.l */
-void plexor_yylex_prepare(void);
-
-
-/* parser.y */
-void run_plexor_parser(PlxFn *plx_fn, const char *body, int len);
 
 #endif

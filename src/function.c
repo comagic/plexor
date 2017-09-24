@@ -158,12 +158,6 @@ plx_fn_get_arg_index(PlxFn *plx_fn, const char *name)
     return -1;
 }
 
-void
-fill_plx_fn_cluster_name(PlxFn* plx_fn, const char *cluster_name)
-{
-    plx_fn->cluster_name = mctx_strcpy(plx_fn->mctx, cluster_name);
-}
-
 static bool
 is_fn_returns_dynamic_record(HeapTuple proc_tuple)
 {
@@ -290,7 +284,7 @@ parse_plx_fn(PlxFn *plx_fn, HeapTuple proc_tuple)
         plx_error(plx_fn, "procedure source datum is null");
 
     src_detoast = PointerGetDatum(PG_DETOAST_DATUM_PACKED(src_raw));
-    run_plexor_parser(plx_fn, VARDATA_ANY(src_detoast), VARSIZE_ANY_EXHDR(src_detoast));
+    parse(plx_fn, VARDATA_ANY(src_detoast), VARSIZE_ANY_EXHDR(src_detoast));
 }
 
 static PlxFn *
