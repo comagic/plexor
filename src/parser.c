@@ -513,60 +513,53 @@ fill_plx_fn(PlxFn *plx_fn, PlxStmt *plx_stmt)
     }
 }
 
-static void
-notice_plx_stmt(char *func_name, PlxStmt *plx_stmt)
-{
-    int i;
+// static void
+// notice_plx_stmt(char *func_name, PlxStmt *plx_stmt)
+// {
+//     int i;
 
-    elog(NOTICE, "%s()", func_name);
-    if (plx_stmt)
-    {
-        if (plx_stmt->cluster_stmt)
-            elog(NOTICE, "\tcluster: %s", plx_stmt->cluster_stmt->name);
-        if (plx_stmt->run_stmt)
-        {
-            if (plx_stmt->run_stmt->fn_stmt)
-            {
-                elog(NOTICE, "\trun function: %s %d", plx_stmt->run_stmt->fn_stmt->name, plx_stmt->run_stmt->fn_stmt->count);
-                for (i = 0; i < plx_stmt->run_stmt->fn_stmt->count; i++)
-                    elog(NOTICE, "\t\t%s", plx_stmt->run_stmt->fn_stmt->tokens[i]->value);
-            }
-            else
-                elog(NOTICE, "\trun function: %p", plx_stmt->run_stmt->fn_stmt);
-            if (plx_stmt->run_stmt->hash_stmt)
-            {
-                elog(NOTICE, "\thash anode: %s", plx_stmt->run_stmt->hash_stmt->anode);
-                elog(NOTICE, "\thash nnode: %s", plx_stmt->run_stmt->hash_stmt->nnode);
-                elog(NOTICE, "\thash any: %d", plx_stmt->run_stmt->hash_stmt->is_any);
-                elog(NOTICE, "\thash all: %d", plx_stmt->run_stmt->hash_stmt->is_all);
-                elog(NOTICE, "\thash all_coalesce: %d", plx_stmt->run_stmt->hash_stmt->is_all_coalesce);
-                if (plx_stmt->run_stmt->hash_stmt->fn_stmt)
-                {
-                    elog(NOTICE, "\thash function: %s", plx_stmt->run_stmt->hash_stmt->fn_stmt->name);
-                    for (i = 0; i < plx_stmt->run_stmt->hash_stmt->fn_stmt->count; i++)
-                        elog(NOTICE, "\t\t%s", plx_stmt->run_stmt->hash_stmt->fn_stmt->tokens[i]->value);
-                }
-                else
-                    elog(NOTICE, "\thash function: %p", plx_stmt->run_stmt->hash_stmt->fn_stmt);
+//     elog(NOTICE, "%s()", func_name);
+//     if (plx_stmt)
+//     {
+//         if (plx_stmt->cluster_stmt)
+//             elog(NOTICE, "\tcluster: %s", plx_stmt->cluster_stmt->name);
+//         if (plx_stmt->run_stmt)
+//         {
+//             if (plx_stmt->run_stmt->fn_stmt)
+//             {
+//                 elog(NOTICE, "\trun function: %s %d", plx_stmt->run_stmt->fn_stmt->name, plx_stmt->run_stmt->fn_stmt->count);
+//                 for (i = 0; i < plx_stmt->run_stmt->fn_stmt->count; i++)
+//                     elog(NOTICE, "\t\t%s", plx_stmt->run_stmt->fn_stmt->tokens[i]->value);
+//             }
+//             else
+//                 elog(NOTICE, "\trun function: %p", plx_stmt->run_stmt->fn_stmt);
+//             if (plx_stmt->run_stmt->hash_stmt)
+//             {
+//                 elog(NOTICE, "\thash anode: %s", plx_stmt->run_stmt->hash_stmt->anode);
+//                 elog(NOTICE, "\thash nnode: %s", plx_stmt->run_stmt->hash_stmt->nnode);
+//                 elog(NOTICE, "\thash any: %d", plx_stmt->run_stmt->hash_stmt->is_any);
+//                 elog(NOTICE, "\thash all: %d", plx_stmt->run_stmt->hash_stmt->is_all);
+//                 elog(NOTICE, "\thash all_coalesce: %d", plx_stmt->run_stmt->hash_stmt->is_all_coalesce);
+//                 if (plx_stmt->run_stmt->hash_stmt->fn_stmt)
+//                 {
+//                     elog(NOTICE, "\thash function: %s", plx_stmt->run_stmt->hash_stmt->fn_stmt->name);
+//                     for (i = 0; i < plx_stmt->run_stmt->hash_stmt->fn_stmt->count; i++)
+//                         elog(NOTICE, "\t\t%s", plx_stmt->run_stmt->hash_stmt->fn_stmt->tokens[i]->value);
+//                 }
+//                 else
+//                     elog(NOTICE, "\thash function: %p", plx_stmt->run_stmt->hash_stmt->fn_stmt);
 
-            }
-        }
-    }
-}
+//             }
+//         }
+//     }
+// }
 
 void
 parse(PlxFn *plx_fn, const char *body, int len)
 {
+
     Lexer   *lexer    = get_lexer(plx_fn, body, len);
     PlxStmt *plx_stmt = get_plx_stmt(plx_fn, lexer);
 
-    // notice_plx_stmt(plx_fn->name, plx_stmt);
-
     fill_plx_fn(plx_fn, plx_stmt);
-    // if (plx_fn->run_query)
-    //     elog(NOTICE, "hash sql: %s", plx_fn->run_query->sql->data);
-    // if (plx_fn->hash_query)
-    //     elog(NOTICE, "hash sql: %s", plx_fn->hash_query->sql->data);
-
-    // plx_error(plx_fn, "-------- %p ----------", plx_stmt);
 }
