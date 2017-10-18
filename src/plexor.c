@@ -81,6 +81,7 @@ get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
 
         types[i] = plx_fn->arg_types[idx]->oid;
         values[i] = PG_GETARG_DATUM(idx);
+        arg_nulls[i] = PG_ARGISNULL(idx) ? 'n' : ' ';
     }
     plan = SPI_prepare(plx_q->sql->data, plx_q->nargs, types);
     err = SPI_execute_plan(plan, values, arg_nulls, true, 0);
@@ -91,8 +92,11 @@ get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
                   SPI_result_code_string(err));
     val = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
     err = SPI_finish();
+
     if (err != SPI_OK_FINISH)
         plx_error(plx_fn, "SPI_finish: %s", SPI_result_code_string(err));
+    if (isnull)
+        plx_error(plx_fn, "node \"null\" not found");
 
     return DatumGetInt32(val);
 }
