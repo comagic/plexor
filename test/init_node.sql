@@ -234,6 +234,16 @@ begin
       select i from generate_series(1, 5) as i;
 end;
 $$;
+
+create or replace function two_args_hash_function(anode_id integer)
+returns integer
+    language plpgsql
+    as $$
+begin
+    return get_node_number();
+end;
+$$;
+
 -- create function test_all_coalesce()
 -- returns integer
 --     language plpgsql

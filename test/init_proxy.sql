@@ -72,6 +72,15 @@ returns integer
   select anode_id;
 $$;
 
+create or replace function get_node(anode_id integer, node integer)
+returns integer
+    language plpgsql
+    as $$
+begin
+  return coalesce(anode_id, node);
+end;
+$$;
+
 create or replace function get_node_number(anode_id integer)
 returns integer
     language plexor
@@ -223,4 +232,12 @@ returns setof integer
     as $$
   cluster proxy;
   run on get_node(anode_id);
+$$;
+
+create or replace function two_args_hash_function(anode_id integer)
+returns setof integer
+    language plexor
+    as $$
+  cluster proxy;
+  run on get_node(anode_id, 1);
 $$;

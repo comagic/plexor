@@ -58,6 +58,24 @@
             (
                 "ERROR:  Plexor function public.syntax_error(): unexpected symbol '|'"
             )
-        }
+        },
+        {
+            'query':
+            '\n'.join(
+                (
+                    'create or replace function two_arg_hash_function(anode_id integer)',
+                    'returns text',
+                    '    language plexor',
+                    '    as $$',
+                    '    cluster proxy;',
+                    '    run on get_node(anode_id, 0);'
+                    '$$;',
+                )
+            ),
+            'pgerror':
+            (
+                "ERROR:  Plexor function public.syntax_error(): unexpected symbol '|'"
+            )
+        },
     ]
 }

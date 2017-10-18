@@ -216,5 +216,10 @@
                      ''',
             'result': []
         },
+        {
+            'query': 'select * from two_args_hash_function(null)',
+            'result': [{'two_args_hash_function': 1}]
+        },
+
     ]
 }
