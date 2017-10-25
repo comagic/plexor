@@ -91,7 +91,11 @@ get_token_start_len(PlxFn *plx_fn, const char *text, int text_len, int *pos, int
 
     for (; *pos < text_len; (*pos)++)
     {
-        if (isalpha(text[*pos]) || isdigit(text[*pos]) || text[*pos] == '_')
+        if (isalpha(text[*pos]) ||
+            isdigit(text[*pos]) ||
+            text[*pos] == '_'   ||
+            text[*pos] == '.'
+        )
         {
             if (*start == -1)
             {
