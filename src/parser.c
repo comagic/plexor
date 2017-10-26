@@ -108,6 +108,7 @@ get_token_start_len(PlxFn *plx_fn, const char *text, int text_len, int *pos, int
         else if (
             text[*pos] == ' '  ||
             text[*pos] == '\t' ||
+            text[*pos] == '\r' ||
             text[*pos] == '\n'
         )
         {
