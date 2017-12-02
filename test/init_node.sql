@@ -244,14 +244,21 @@ begin
 end;
 $$;
 
--- create function test_all_coalesce()
--- returns integer
---     language plpgsql
---     as $$
--- begin
---     return null;
--- end;
--- $$;
+create or replace
+function test_all_coalesce_on_records(
+  out a text,
+  out b text
+) returns record as $$
+begin
+  {% if node == 0 %}
+  return;
+  {% else %}
+  a := 'node{{ node }}';
+  b := '';
+  {% endif %}
+end;
+$$ language plpgsql;
+
 
 create table t (
   id integer not null,

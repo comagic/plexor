@@ -243,7 +243,16 @@ returns setof integer
 $$;
 
 create or replace
+function test_all_coalesce_on_records(
+  out a text,
+  out b text
+) returns record as $$
+  cluster proxy;
+  run on all coalesce;
+$$ language plexor;
+
+create or replace
 function diferred_error() returns void as $$
-cluster proxy;
-run on 0;
+  cluster proxy;
+  run on 0;
 $$ language plexor;

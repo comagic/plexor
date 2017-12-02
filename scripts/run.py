@@ -94,7 +94,7 @@ def cycle_test(
             else:
                 check = False
             execute('rollback;', connect=connect)
-    elif expect_result:
+    elif expect_result is not None:
         check = check_result(result, expect_result)
     else:
         check = True

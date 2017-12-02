@@ -61,6 +61,23 @@ get_row(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result, int nrow)
     if (fcinfo->isnull)
         return (Datum) NULL;
 
+    if (plx_fn->ret_type->oid == RECORDOID)
+    {
+        Oid       oid;
+        TupleDesc tuple_desc;
+
+        get_call_result_type(fcinfo, &oid, &tuple_desc);
+        if (
+            tuple_desc &&
+            /* 2 means ( and ), tuple_desc->natts - 1 means ',' count */
+            PQgetlength(pg_result, nrow, 0) == 2 + tuple_desc->natts - 1
+        )
+        {
+            fcinfo->isnull = 1;
+            return (Datum) NULL;
+        }
+    }
+
     PG_TRY();
     {
         setFixedStringInfo(&buf,
@@ -84,6 +101,7 @@ get_row(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result, int nrow)
         PG_RE_THROW();
     }
     PG_END_TRY();
+
     return ret;
 }
 
