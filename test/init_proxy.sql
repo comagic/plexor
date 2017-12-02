@@ -241,3 +241,9 @@ returns setof integer
   cluster proxy;
   run on get_node(anode_id, 1);
 $$;
+
+create or replace
+function diferred_error() returns void as $$
+cluster proxy;
+run on 0;
+$$ language plexor;

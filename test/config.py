@@ -220,6 +220,17 @@
             'query': 'select * from two_args_hash_function(null)',
             'result': [{'two_args_hash_function': 1}]
         },
+        {
+            'query': 'select diferred_error()',
+            'pgerror':
+            '\n'.join(
+                (
+                    'ERROR:  Remote error: duplicate key value violates '
+                    'unique constraint "uni_id"',
+                    'DETAIL:  Remote detail: Key (id)=(1) already exists.'
+                )
+            )
+        },
 
     ]
 }

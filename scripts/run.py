@@ -35,7 +35,10 @@ def execute(query, connect=None, dsn=None, is_autocommit=False):
     except:
         res = None
     cursor.close()
-    connect.commit()
+    try:
+        connect.commit()
+    except  psycopg2.IntegrityError as err:
+        return None, err.pgerror.strip(), False
     if is_close_connect:
         connect.close()
     return res, None, True

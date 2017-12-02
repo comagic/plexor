@@ -252,3 +252,16 @@ $$;
 --     return null;
 -- end;
 -- $$;
+
+create table t (
+  id integer not null,
+  constraint uni_id unique(id) deferrable initially deferred
+);
+
+create or replace
+function diferred_error() returns void as $$
+begin
+  insert into t(id)
+    values (1), (1);
+end;
+$$ language plpgsql;

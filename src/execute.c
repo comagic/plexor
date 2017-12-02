@@ -42,7 +42,7 @@ execute_init(void)
         epoll_fd = epoll_create(1);
 }
 
-static void
+void
 pg_result_error(PGresult *pg_result)
 {
     const char *diag_sqlstate = mctx_strcpy(CurrentMemoryContext, PQresultErrorField(pg_result, PG_DIAG_SQLSTATE));

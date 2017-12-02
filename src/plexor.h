@@ -258,5 +258,6 @@ void parse(PlxFn *plx_fn, const char *body, int len);
 void execute_init(void);
 Datum remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
 void remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo, bool is_first_call);
+void pg_result_error(PGresult *pg_result);
 
 #endif
