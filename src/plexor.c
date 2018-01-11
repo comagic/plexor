@@ -95,8 +95,8 @@ get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
 
     if (err != SPI_OK_FINISH)
         plx_error(plx_fn, "SPI_finish: %s", SPI_result_code_string(err));
-    if (isnull)
-        plx_error(plx_fn, "node \"null\" not found");
+    // if (isnull)
+    //     plx_error(plx_fn, "node \"null\" not found");
 
     return DatumGetInt32(val);
 }
