@@ -235,6 +235,10 @@
             'query': 'select test_all_coalesce_on_records()',
             'result': [{'test_all_coalesce_on_records': '(node1,"")'}]
         },
+        {
+            'query': 'select get_jsonb(0)',
+            'result': [{'get_jsonb': {u'node_id': 0}}]
+        },
 
     ]
 }

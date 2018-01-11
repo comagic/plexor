@@ -256,3 +256,10 @@ function diferred_error() returns void as $$
   cluster proxy;
   run on 0;
 $$ language plexor;
+
+create or replace 
+function get_jsonb(anode_id integer)
+returns jsonb as $$
+  cluster proxy;
+  run on get_node(anode_id);
+$$ language plexor;

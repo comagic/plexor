@@ -272,3 +272,12 @@ begin
     values (1), (1);
 end;
 $$ language plpgsql;
+
+create or replace 
+function get_jsonb(
+  anode_id integer
+) returns jsonb as $$
+begin
+  return jsonb_build_object('node_id', anode_id);
+end;
+$$ language plpgsql;
