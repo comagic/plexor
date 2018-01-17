@@ -117,7 +117,7 @@ select_plx_conn(FunctionCallInfo fcinfo, PlxCluster *plx_cluster, PlxFn *plx_fn)
     else if (plx_fn->run_on == RUN_ON_ALL_COALESCE)
     {
         plx_error(plx_fn, "using run on all coalesce deny for setof");
-	return NULL;
+        return NULL;
     }
 
     plx_error(plx_fn, "failed to run on %d", plx_fn->run_on);
@@ -148,15 +148,20 @@ single_execute(FunctionCallInfo fcinfo)
 
     plx_fn = get_plx_fn(fcinfo);
     plx_cluster = get_plx_cluster(plx_fn->cluster_name);
-    if (plx_fn->run_on == RUN_ON_ALL && plx_fn->is_return_void)
+    if (plx_fn->run_on == RUN_ON_ALL)
     {
-        for (i = 0; i < plx_cluster->nnodes; i++)
+        if (plx_fn->is_return_void)
         {
-            plx_conn = get_plx_conn(plx_cluster, i);
-            remote_single_execute(plx_conn, plx_fn, fcinfo);
+            for (i = 0; i < plx_cluster->nnodes; i++)
+            {
+                plx_conn = get_plx_conn(plx_cluster, i);
+                remote_single_execute(plx_conn, plx_fn, fcinfo);
+            }
+            fcinfo->isnull = true;
+            return (Datum) NULL;
         }
-        fcinfo->isnull = true;
-        return (Datum) NULL;
+        else
+            elog(ERROR, "failed to run on all for not setof non void result");
     }
     if (plx_fn->run_on == RUN_ON_ALL_COALESCE)
     {
@@ -213,6 +218,15 @@ plexor_validator(PG_FUNCTION_ARGS)
         delete_plx_fn(plx_fn, false);
         ReleaseSysCache(proc_tuple);
         elog(ERROR, "using run on all coalesce deny for setof");
+    }
+    if (plx_fn->run_on == RUN_ON_ALL &&
+        !fcinfo->flinfo->fn_retset &&
+        !plx_fn->is_return_void
+    )
+    {
+        delete_plx_fn(plx_fn, false);
+        ReleaseSysCache(proc_tuple);
+        elog(ERROR, "using run on all for not setof non void result is senseless");
 
     }
     delete_plx_fn(plx_fn, false);
