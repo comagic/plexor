@@ -168,7 +168,8 @@ single_execute(FunctionCallInfo fcinfo)
             if (!fcinfo->isnull)
                 return result;
         }
-        return result;
+        fcinfo->isnull = true;
+        return (Datum) NULL;
     }
     plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
     return remote_single_execute(plx_conn, plx_fn, fcinfo);
