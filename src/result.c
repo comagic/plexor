@@ -70,6 +70,7 @@ get_row(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result, int nrow)
         if (
             tuple_desc &&
             /* 2 means ( and ), tuple_desc->natts - 1 means ',' count */
+	    /* example: natts = 3 => (,,) */
             PQgetlength(pg_result, nrow, 0) == 2 + tuple_desc->natts - 1
         )
         {
@@ -128,10 +129,10 @@ get_next_row(FunctionCallInfo fcinfo)
         PlxFn      *plx_fn = plx_result->plx_fn;
         PlxConn    *plx_conn = get_plx_conn(plx_cluster, plx_result->plx_conn->nnode + 1);
 
+	funcctx->user_fctx = NULL;
         pfree(plx_result);
         remote_retset_execute(plx_conn, plx_fn, fcinfo, false);
         return get_next_row(fcinfo);
-
     }
     pfree(plx_result);
     SRF_RETURN_DONE(funcctx);
