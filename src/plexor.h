@@ -57,6 +57,13 @@
 #include <funcapi.h>
 #include <libpq-fe.h>
 #include <miscadmin.h>
+#include <stdlib.h>
+#include <time.h>
+
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+
 
 /*
 longest string of {auto commit | {read committed | serializable } \
@@ -65,6 +72,7 @@ is "read committed read write not deferrable" (42 chars)
 */
 #define MAX_ISOLATION_LEVEL_LEN 42
 #define MAX_DSN_LEN 1024
+#define MAX_NODES 100
 #define MAX_RESULTS_PER_EXPR 128
 #define MAX_CONNECTIONS 128
 #define TYPED_SQL_TMPL "select %s"
@@ -104,12 +112,12 @@ mctx_strcpy(MemoryContext mctx, const char *s)
 
 typedef struct PlxCluster
 {
-    Oid             oid;                     /* foreign server OID  */
-    char            name[NAMEDATALEN];       /* foreign server name */
+    Oid             oid;                            /* foreign server OID  */
+    char            name[NAMEDATALEN];              /* foreign server name */
     char           *isolation_level;
     int             connection_lifetime;
-    char            nodes[100][MAX_DSN_LEN]; /* node DSNs           */
-    int             nnodes;                  /* nodes count         */
+    char            nodes[MAX_NODES][MAX_DSN_LEN];  /* node DSNs           */
+    int             nnodes;                         /* nodes count         */
 } PlxCluster;
 
 
@@ -135,10 +143,12 @@ typedef struct PlxQuery
 
 typedef enum RunOnType
 {
-    RUN_ON_HASH  = 1,                        /* node returned by hash function         */
-    RUN_ON_NNODE = 2,                        /* exact node number                      */
-    RUN_ON_ANY   = 3,                        /* decide randomly during runtime         */
-    RUN_ON_ANODE = 4,                        /* get node number from function argument */
+    RUN_ON_HASH         = 1,                 /* node returned by hash function         */
+    RUN_ON_NNODE        = 2,                 /* exact node number                      */
+    RUN_ON_ANY          = 3,                 /* decide randomly during runtime         */
+    RUN_ON_ANODE        = 4,                 /* get node number from function argument */
+    RUN_ON_ALL          = 5,                 /* return all nodes (for retset)          */
+    RUN_ON_ALL_COALESCE = 6,                 /* return all nodes (for single)          */
 } RunOnType;
 
 typedef struct PlxFn
@@ -160,24 +170,27 @@ typedef struct PlxFn
     PlxType        *ret_type;                /* plexor function return type                */
     int             ret_type_mod;            /* tdtypmod for record or -1                  */
     bool            is_binary;               /* use binary fotmat to transfer values       */
-    bool            is_untyped_record;       /* return type is untyped record              */
+    bool            is_return_untyped_record;/* return type is untyped record              */
+    bool            is_return_void;          /* return type is untyped record              */
     TupleStamp      stamp;                   /* stamp to determinate function upadte       */
 } PlxFn;
-
-typedef struct PlxResult
-{
-    PlxFn          *plx_fn;                  /* plexor function the result is user for     */
-    PGresult       *pg_result;               /* result from node                           */
-} PlxResult;
 
 typedef struct PlxConn
 {
     PlxCluster     *plx_cluster;             /* cluster date                               */
     PGconn         *pq_conn;                 /* connection to node                         */
+    int             nnode;                   /* node number                                */
     char           *dsn;                     /* node dns                                   */
     int             xlevel;                  /* transaction nest level                     */
     time_t          connect_time;            /* time at which connection was opened        */
 } PlxConn;
+
+typedef struct PlxResult
+{
+    PlxFn          *plx_fn;                  /* plexor function the result is user for     */
+    PGresult       *pg_result;               /* result from node                           */
+    PlxConn        *plx_conn;                /* pointer to external connection             */
+} PlxResult;
 
 /* Structure to keep plx_conn in HTAB's context. */
 typedef struct PlxConnHashEntry
@@ -211,16 +224,13 @@ PlxFn *compile_plx_fn(FunctionCallInfo fcinfo, HeapTuple proc_tuple, bool is_val
 PlxFn *get_plx_fn(FunctionCallInfo fcinfo);
 PlxFn *plx_fn_lookup_cache(Oid fn_oid);
 void   delete_plx_fn(PlxFn *plx_fn, bool is_cache_delete);
-void   fill_plx_fn_cluster_name(PlxFn* plx_fn, const char *cluster_name);
 void   fill_plx_fn_anode(PlxFn* plx_fn, const char *anode_name);
 int    plx_fn_get_arg_index(PlxFn *plx_fn, const char *name);
 
 
 /* result.c */
-void  plx_result_cache_init(void);
-void  plx_result_insert_cache(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result);
-void  set_single_result(PlxFn *plx_fn, PGresult* pg_result);
-Datum get_single_result(FunctionCallInfo fcinfo);
+PlxResult* new_plx_result(PlxConn *plx_conn, PlxFn *plx_fn, PGresult *pg_result, MemoryContext mctx);
+Datum get_row(FunctionCallInfo fcinfo, PlxFn *plx_fn, PGresult *pg_result, int nrow);
 Datum get_next_row(FunctionCallInfo fcinfo);
 
 
@@ -236,21 +246,18 @@ void start_transaction(PlxConn* plx_conn);
 
 /* plexor.c */
 void plx_error_with_errcode(PlxFn *plx_fn, int err_code, const char *fmt, ...)
-	__attribute__((format(PG_PRINTF_ATTRIBUTE, 3, 4)));
+     __attribute__((format(PG_PRINTF_ATTRIBUTE, 3, 4)));
 #define plx_error(func,...) plx_error_with_errcode((func), ERRCODE_INTERNAL_ERROR, __VA_ARGS__)
+#define plx_syntax_error(func,...) plx_error_with_errcode((func), ERRCODE_SYNTAX_ERROR , __VA_ARGS__)
 
-void plexor_yyerror(const char *fmt, ...)
-	__attribute__((format(PG_PRINTF_ATTRIBUTE, 1, 2)));
 
+/* parser.c */
+void parse(PlxFn *plx_fn, const char *body, int len);
+
+/* execute.c */
 void execute_init(void);
-void remote_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
-
-
-/* scanner.l */
-void plexor_yylex_prepare(void);
-
-
-/* parser.y */
-void run_plexor_parser(PlxFn *plx_fn, const char *body, int len);
+Datum remote_single_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo);
+void remote_retset_execute(PlxConn *plx_conn, PlxFn *plx_fn, FunctionCallInfo fcinfo, bool is_first_call);
+void pg_result_error(PGresult *pg_result);
 
 #endif

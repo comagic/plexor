@@ -124,13 +124,21 @@ xact_callback(XactEvent event, void *arg)
 
         if (plx_conn->xlevel > 0)
         {
-            PGresult *pg_result;
-            pg_result = PQexec(plx_conn->pq_conn, sql);
-            if (pg_result)
+            PGresult       *pg_result = PQexec(plx_conn->pq_conn, sql);
+            ExecStatusType  status    = PQresultStatus(pg_result);
+
+            if (
+                status != PGRES_TUPLES_OK &&
+                status != PGRES_COMMAND_OK &&
+                status != PGRES_COPY_IN &&
+                status != PGRES_COPY_OUT &&
+                status != PGRES_COPY_BOTH
+            )
+                pg_result_error(pg_result);
+            else if (pg_result)
                 PQclear(pg_result);
             plx_conn->xlevel = 0;
         }
-
     }
     UnregisterXactCallback(xact_callback, NULL);
     UnregisterSubXactCallback(subxact_callback, NULL);

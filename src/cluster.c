@@ -163,7 +163,10 @@ new_plx_cluster(char* name)
         int      node_num;
 
         if (extract_node_num(def->defname, &node_num))
+        {
             strcpy(plx_cluster->nodes[node_num], strVal(def->arg));
+            plx_cluster->nnodes = node_num + 1;
+        }
         else if (!strcmp(def->defname, "isolation_level"))
         {
             pfree(plx_cluster->isolation_level);

@@ -158,12 +158,6 @@ plx_fn_get_arg_index(PlxFn *plx_fn, const char *name)
     return -1;
 }
 
-void
-fill_plx_fn_cluster_name(PlxFn* plx_fn, const char *cluster_name)
-{
-    plx_fn->cluster_name = mctx_strcpy(plx_fn->mctx, cluster_name);
-}
-
 static bool
 is_fn_returns_dynamic_record(HeapTuple proc_tuple)
 {
@@ -276,6 +270,7 @@ fill_plx_fn_ret_type(PlxFn* plx_fn, FunctionCallInfo fcinfo)
     if (plx_fn->is_binary && !OidIsValid(&plx_fn->ret_type->oid))
         plx_fn->is_binary = 0;
     plx_fn->ret_type_mod = (oid == RECORDOID) ? tuple_desc->tdtypmod : -1;
+    plx_fn->is_return_void = oid == VOIDOID;
 }
 
 static void
@@ -289,7 +284,7 @@ parse_plx_fn(PlxFn *plx_fn, HeapTuple proc_tuple)
         plx_error(plx_fn, "procedure source datum is null");
 
     src_detoast = PointerGetDatum(PG_DETOAST_DATUM_PACKED(src_raw));
-    run_plexor_parser(plx_fn, VARDATA_ANY(src_detoast), VARSIZE_ANY_EXHDR(src_detoast));
+    parse(plx_fn, VARDATA_ANY(src_detoast), VARSIZE_ANY_EXHDR(src_detoast));
 }
 
 static PlxFn *
@@ -320,7 +315,7 @@ compile_plx_fn(FunctionCallInfo fcinfo, HeapTuple proc_tuple, bool is_validate)
         return plx_fn;
 
     plx_fn->is_binary = 0; // fixme try to use 1 and text only if binary failed
-    plx_fn->is_untyped_record = is_fn_returns_dynamic_record(proc_tuple);
+    plx_fn->is_return_untyped_record = is_fn_returns_dynamic_record(proc_tuple);
     if (!plx_fn->run_query)
         plx_fn->run_query = create_plx_query_from_plx_fn(plx_fn);
     fill_plx_fn_ret_type(plx_fn, fcinfo);

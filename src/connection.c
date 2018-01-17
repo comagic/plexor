@@ -169,7 +169,7 @@ delete_plx_conn(PlxConn *plx_conn)
 }
 
 static PlxConn*
-new_plx_conn(PlxCluster *plx_cluster, char *dsn)
+new_plx_conn(PlxCluster *plx_cluster, int nnode, char *dsn)
 {
     PlxConn        *plx_conn;
     struct timeval  now;
@@ -178,6 +178,7 @@ new_plx_conn(PlxCluster *plx_cluster, char *dsn)
     old_ctx = MemoryContextSwitchTo(plx_conn_mctx);
     plx_conn = palloc0(sizeof(PlxConn));
     plx_conn->plx_cluster = plx_cluster;
+    plx_conn->nnode = nnode;
     plx_conn->dsn = pstrdup(dsn);
     plx_conn->pq_conn = PQconnectdb(plx_conn->dsn);
     MemoryContextSwitchTo(old_ctx);
@@ -222,7 +223,7 @@ get_plx_conn(PlxCluster *plx_cluster, int nnode)
     if (plx_conn)
         return plx_conn;
 
-    plx_conn = new_plx_conn(plx_cluster, dsn->data);
+    plx_conn = new_plx_conn(plx_cluster, nnode, dsn->data);
     if (PQsetnonblocking(plx_conn->pq_conn, 1))
     {
         char *error_message = pstrdup(PQerrorMessage(plx_conn->pq_conn));

@@ -1,0 +1,7 @@
+*.o
+*.pyc
+plexor_test.egg-info
+src/parser.tab.*
+src/scanner.*
+plexor.so
+sql/plexor--*.sql

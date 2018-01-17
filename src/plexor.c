@@ -53,8 +53,8 @@ plx_startup_init(void)
     plx_cluster_cache_init();
     plx_conn_cache_init();
     plx_fn_cache_init();
-    plx_result_cache_init();
     execute_init();
+    srand(time(NULL));
 
     initialized = true;
 }
@@ -81,6 +81,7 @@ get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
 
         types[i] = plx_fn->arg_types[idx]->oid;
         values[i] = PG_GETARG_DATUM(idx);
+        arg_nulls[i] = PG_ARGISNULL(idx) ? 'n' : ' ';
     }
     plan = SPI_prepare(plx_q->sql->data, plx_q->nargs, types);
     err = SPI_execute_plan(plan, values, arg_nulls, true, 0);
@@ -91,31 +92,86 @@ get_nnode(PlxFn *plx_fn, FunctionCallInfo fcinfo)
                   SPI_result_code_string(err));
     val = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
     err = SPI_finish();
+
     if (err != SPI_OK_FINISH)
         plx_error(plx_fn, "SPI_finish: %s", SPI_result_code_string(err));
+    // if (isnull)
+    //     plx_error(plx_fn, "node \"null\" not found");
 
     return DatumGetInt32(val);
 }
 
+static PlxConn*
+select_plx_conn(FunctionCallInfo fcinfo, PlxCluster *plx_cluster, PlxFn *plx_fn)
+{
+    if (plx_fn->run_on == RUN_ON_HASH)
+        return get_plx_conn(plx_cluster, get_nnode(plx_fn, fcinfo));
+    else if (plx_fn->run_on == RUN_ON_NNODE)
+        return get_plx_conn(plx_cluster, plx_fn->nnode);
+    else if (plx_fn->run_on == RUN_ON_ANODE)
+        return get_plx_conn(plx_cluster, PG_GETARG_DATUM(plx_fn->anode));
+    else if (plx_fn->run_on == RUN_ON_ANY)
+        return get_plx_conn(plx_cluster, rand() % plx_cluster->nnodes);
+    else if (plx_fn->run_on == RUN_ON_ALL)
+        return get_plx_conn(plx_cluster, 0);
+    else if (plx_fn->run_on == RUN_ON_ALL_COALESCE)
+    {
+        plx_error(plx_fn, "using run on all coalesce deny for setof");
+	return NULL;
+    }
+
+    plx_error(plx_fn, "failed to run on %d", plx_fn->run_on);
+    return NULL;
+}
+
+
 static void
-execute(FunctionCallInfo fcinfo)
+retset_execute(FunctionCallInfo fcinfo)
 {
     PlxCluster *plx_cluster = NULL;
     PlxConn    *plx_conn    = NULL;
     PlxFn      *plx_fn      = NULL;
 
-    plx_startup_init();
     plx_fn = get_plx_fn(fcinfo);
     plx_cluster = get_plx_cluster(plx_fn->cluster_name);
-    if (plx_fn->run_on == RUN_ON_HASH)
-        plx_conn = get_plx_conn(plx_cluster, get_nnode(plx_fn, fcinfo));
-    else if (plx_fn->run_on == RUN_ON_NNODE)
-        plx_conn = get_plx_conn(plx_cluster, plx_fn->nnode);
-    else if (plx_fn->run_on == RUN_ON_ANODE)
-        plx_conn = get_plx_conn(plx_cluster, PG_GETARG_DATUM(plx_fn->anode));
-    else
-        plx_error(plx_fn, "failed to run on %d", plx_fn->run_on);
-    remote_execute(plx_conn, plx_fn, fcinfo);
+    plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
+    remote_retset_execute(plx_conn, plx_fn, fcinfo, true);
+}
+
+static Datum
+single_execute(FunctionCallInfo fcinfo)
+{
+    PlxCluster *plx_cluster = NULL;
+    PlxConn    *plx_conn    = NULL;
+    PlxFn      *plx_fn      = NULL;
+    int         i;
+
+    plx_fn = get_plx_fn(fcinfo);
+    plx_cluster = get_plx_cluster(plx_fn->cluster_name);
+    if (plx_fn->run_on == RUN_ON_ALL && plx_fn->is_return_void)
+    {
+        for (i = 0; i < plx_cluster->nnodes; i++)
+        {
+            plx_conn = get_plx_conn(plx_cluster, i);
+            remote_single_execute(plx_conn, plx_fn, fcinfo);
+        }
+        fcinfo->isnull = true;
+        return (Datum) NULL;
+    }
+    if (plx_fn->run_on == RUN_ON_ALL_COALESCE)
+    {
+        Datum result;
+        for (i = 0; i < plx_cluster->nnodes; i++)
+        {
+            plx_conn = get_plx_conn(plx_cluster, i);
+            result = remote_single_execute(plx_conn, plx_fn, fcinfo);
+            if (!fcinfo->isnull)
+                return result;
+        }
+        return result;
+    }
+    plx_conn = select_plx_conn(fcinfo, plx_cluster, plx_fn);
+    return remote_single_execute(plx_conn, plx_fn, fcinfo);
 }
 
 Datum
@@ -124,17 +180,15 @@ plexor_call_handler(PG_FUNCTION_ARGS)
     if (CALLED_AS_TRIGGER(fcinfo))
         elog(ERROR, "plexor function can't be used as triggers");
 
+    plx_startup_init();
     if (fcinfo->flinfo->fn_retset)
     {
         if (SRF_IS_FIRSTCALL())
-            execute(fcinfo);
+            retset_execute(fcinfo);
         return get_next_row(fcinfo);
     }
     else
-    {
-        execute(fcinfo);
-        return get_single_result(fcinfo);
-    }
+        return single_execute(fcinfo);
 }
 
 Datum
@@ -153,6 +207,13 @@ plexor_validator(PG_FUNCTION_ARGS)
 
     plx_startup_init();
     plx_fn = compile_plx_fn(NULL, proc_tuple, true);
+    if (fcinfo->flinfo->fn_retset && plx_fn->run_on == RUN_ON_ALL_COALESCE)
+    {
+        delete_plx_fn(plx_fn, false);
+        ReleaseSysCache(proc_tuple);
+        elog(ERROR, "using run on all coalesce deny for setof");
+
+    }
     delete_plx_fn(plx_fn, false);
 
     ReleaseSysCache(proc_tuple);
