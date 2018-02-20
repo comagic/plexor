@@ -200,9 +200,10 @@ plexor_call_handler(PG_FUNCTION_ARGS)
 Datum
 plexor_validator(PG_FUNCTION_ARGS)
 {
-    Oid        oid        = PG_GETARG_OID(0);
-    PlxFn     *plx_fn     = NULL;
-    HeapTuple  proc_tuple = NULL;
+    Oid           oid        = PG_GETARG_OID(0);
+    PlxFn        *plx_fn     = NULL;
+    HeapTuple     proc_tuple = NULL;
+    Form_pg_proc  proc_struct;
 
     if (!CheckFunctionValidatorAccess(fcinfo->flinfo->fn_oid, oid))
         PG_RETURN_VOID();
@@ -213,14 +214,15 @@ plexor_validator(PG_FUNCTION_ARGS)
 
     plx_startup_init();
     plx_fn = compile_plx_fn(NULL, proc_tuple, true);
-    if (fcinfo->flinfo->fn_retset && plx_fn->run_on == RUN_ON_ALL_COALESCE)
+    proc_struct = (Form_pg_proc) GETSTRUCT(proc_tuple);
+    if (proc_struct->proretset && plx_fn->run_on == RUN_ON_ALL_COALESCE)
     {
         delete_plx_fn(plx_fn, false);
         ReleaseSysCache(proc_tuple);
         elog(ERROR, "using run on all coalesce deny for setof");
     }
     if (plx_fn->run_on == RUN_ON_ALL &&
-        !fcinfo->flinfo->fn_retset &&
+        !proc_struct->proretset &&
         !plx_fn->is_return_void
     )
     {
