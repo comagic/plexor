@@ -236,6 +236,10 @@
             'result': [{'test_all_coalesce_on_records': '(node1,"")'}]
         },
         {
+            'query': 'select test_run_on_all(2) as i',
+            'result': [{'i': 1}, {'i': 2}, {'i': 1}, {'i': 2}, {'i': 1}, {'i': 2}]
+        },
+        {
             'query': 'select get_jsonb(0)',
             'result': [{'get_jsonb': {u'node_id': 0}}]
         },

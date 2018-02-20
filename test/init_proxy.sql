@@ -243,6 +243,12 @@ returns setof integer
 $$;
 
 create or replace
+function test_run_on_all(n integer) returns setof integer as $$
+  cluster proxy;
+  run on all;
+$$ language plexor;
+
+create or replace
 function test_all_coalesce_on_records(
   out a text,
   out b text
@@ -257,7 +263,7 @@ function diferred_error() returns void as $$
   run on 0;
 $$ language plexor;
 
-create or replace 
+create or replace
 function get_jsonb(anode_id integer)
 returns jsonb as $$
   cluster proxy;

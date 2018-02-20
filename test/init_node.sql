@@ -245,6 +245,15 @@ end;
 $$;
 
 create or replace
+function test_run_on_all(n integer) returns setof integer as $$
+begin
+  return query
+    select i
+      from generate_series(1, n) as i;
+end;
+$$ language plpgsql;
+
+create or replace
 function test_all_coalesce_on_records(
   out a text,
   out b text
@@ -273,7 +282,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace 
+create or replace
 function get_jsonb(
   anode_id integer
 ) returns jsonb as $$
