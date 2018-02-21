@@ -35,5 +35,5 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{pgbaseinstdir}/%{_lib}/pgsql/plexor.so
-%{pgbaseinstdir}/share/pgsql/extension/plexor--0.1.sql
+%{pgbaseinstdir}/share/pgsql/extension/plexor--2.1.sql
 %{pgbaseinstdir}/share/pgsql/extension/plexor.control
