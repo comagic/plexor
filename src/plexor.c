@@ -221,9 +221,10 @@ plexor_validator(PG_FUNCTION_ARGS)
         ReleaseSysCache(proc_tuple);
         elog(ERROR, "using run on all coalesce deny for setof");
     }
+
     if (plx_fn->run_on == RUN_ON_ALL &&
         !proc_struct->proretset &&
-        !plx_fn->is_return_void
+        proc_struct->prorettype != VOIDOID
     )
     {
         delete_plx_fn(plx_fn, false);
