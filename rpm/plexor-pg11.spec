@@ -1,20 +1,19 @@
-%global version         2.1.0
-%global pgmajorversion  9.6
-%global pgmimorversion  1
+%global version         2.2
+%global pgmajorversion  11
 %define pgbaseinstdir   /usr
-%global oname           plexor
+%global oname           plexor-pg%{pgmajorversion}
 
 Summary:   Plexor - remote function call PL language
 Name:      %{oname}
 Version:   %{version}
-Release:   2%{?dist}
+Release:   1%{?dist}
 Group:     Applications/Databases
 License:   BSD
 Source0:   %{oname}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRoot: %{_tmppath}/%{oname}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires: postgresql-devel >= %{pgmajorversion}.%{pgmimorversion} flex >= 2.5.37
-Requires:      postgresql >= %{pgmajorversion}.%{pgmimorversion}
+BuildRequires: postgresql-devel >= %{pgmajorversion}
+Requires:      postgresql >= %{pgmajorversion}
 
 %description
 Plexor - remote function call PL language
@@ -35,5 +34,5 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{pgbaseinstdir}/%{_lib}/pgsql/plexor.so
-%{pgbaseinstdir}/share/pgsql/extension/plexor--2.1.sql
+%{pgbaseinstdir}/share/pgsql/extension/plexor--%{version}.sql
 %{pgbaseinstdir}/share/pgsql/extension/plexor.control

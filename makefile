@@ -1,5 +1,5 @@
 EXTENSION   = plexor
-EXT_VERSION = 2.1
+EXT_VERSION = 2.2
 
 MODULE_big  = $(EXTENSION)
 
@@ -36,13 +36,7 @@ SHLIB_LINK = -L$(PQLIB) -lpq
 PG_CONFIG   = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 
-
 include $(PGXS)
-
-# PGXS may define them as empty
-FLEX := $(if $(FLEX),$(FLEX),flex)
-BISON := $(if $(BISON),$(BISON),bison)
-
 
 sql/plexor.sql: $(PLEXOR_SQL)
 	cat $^ > $@
