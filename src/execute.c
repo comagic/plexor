@@ -273,7 +273,7 @@ get_dymanic_record_fields(PlxFn *plx_fn, FunctionCallInfo fcinfo)
         HeapTuple         type_tuple;
         Form_pg_type      type_struct;
 
-        a = tuple_desc->attrs[i];
+        a = TupleDescAttr(tuple_desc, i);
         type_tuple = SearchSysCache(TYPEOID, ObjectIdGetDatum(a->atttypid), 0, 0, 0);
         if (!HeapTupleIsValid(type_tuple))
             plx_error(plx_fn, "cache lookup failed for type %u", a->atttypid);

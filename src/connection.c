@@ -109,7 +109,7 @@ get_user_mapping(PlxCluster *plx_cluster)
     /* Check permissions, user must have usage on the server. */
     acl_result = pg_foreign_server_aclcheck(um->serverid, um->userid, ACL_USAGE);
     if (acl_result != ACLCHECK_OK)
-        aclcheck_error(acl_result, ACL_KIND_FOREIGN_SERVER, plx_cluster->name);
+        aclcheck_error(acl_result, OBJECT_FOREIGN_SERVER, plx_cluster->name);
 
     return um;
 }
