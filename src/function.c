@@ -179,8 +179,7 @@ fill_plx_fn_name(PlxFn* plx_fn, Form_pg_proc proc_struct)
     StringInfo        buf;
 
     nsoid = proc_struct->pronamespace;
-    ns_tuple = SearchSysCache(NAMESPACEOID,
-                              ObjectIdGetDatum(nsoid), 0, 0, 0);
+    ns_tuple = SearchSysCache1(NAMESPACEOID, ObjectIdGetDatum(nsoid));
     if (!HeapTupleIsValid(ns_tuple))
         plx_error(plx_fn, "Cannot find namespace %u", nsoid);
     ns_struct = (Form_pg_namespace) GETSTRUCT(ns_tuple);
@@ -376,7 +375,7 @@ get_plx_fn(FunctionCallInfo fcinfo)
     HeapTuple  proc_tuple;
     PlxFn     *plx_fn = plx_fn_lookup_cache(fcinfo->flinfo->fn_oid);
 
-    proc_tuple = SearchSysCache(PROCOID, ObjectIdGetDatum(fcinfo->flinfo->fn_oid), 0, 0, 0);
+    proc_tuple = SearchSysCache1(PROCOID, ObjectIdGetDatum(fcinfo->flinfo->fn_oid));
     if (!HeapTupleIsValid(proc_tuple))
         elog(ERROR, "cache lookup failed for function %u", fcinfo->flinfo->fn_oid);
 

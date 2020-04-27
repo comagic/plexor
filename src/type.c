@@ -36,7 +36,7 @@ is_plx_type_todate(PlxType *plx_type)
     HeapTuple type_tuple;
     bool      ret;
 
-    type_tuple = SearchSysCache(TYPEOID, ObjectIdGetDatum(plx_type->oid), 0, 0, 0);
+    type_tuple = SearchSysCache1(TYPEOID, ObjectIdGetDatum(plx_type->oid));
     if (!HeapTupleIsValid(type_tuple))
         elog(ERROR, "cache lookup failed for type %u", plx_type->oid);
 
@@ -52,7 +52,7 @@ new_plx_type(Oid oid, MemoryContext mctx)
     Form_pg_type  type_struct;
     PlxType      *plx_type = NULL;
 
-    type_tuple = SearchSysCache(TYPEOID, ObjectIdGetDatum(oid), 0, 0, 0);
+    type_tuple = SearchSysCache1(TYPEOID, ObjectIdGetDatum(oid));
     if (!HeapTupleIsValid(type_tuple))
         elog(ERROR, "cache lookup failed for type %u", oid);
     type_struct = (Form_pg_type) GETSTRUCT(type_tuple);
