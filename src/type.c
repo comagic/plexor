@@ -58,7 +58,7 @@ new_plx_type(Oid oid, MemoryContext mctx)
     type_struct = (Form_pg_type) GETSTRUCT(type_tuple);
 
     plx_type = MemoryContextAllocZero(mctx, sizeof(PlxType));
-    plx_type->oid = HeapTupleGetOid(type_tuple);
+    plx_type->oid = type_struct->oid;
     fmgr_info_cxt(type_struct->typsend,    &plx_type->send_fn,    mctx);
     fmgr_info_cxt(type_struct->typreceive, &plx_type->receive_fn, mctx);
     fmgr_info_cxt(type_struct->typoutput,  &plx_type->output_fn,  mctx);

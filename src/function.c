@@ -306,7 +306,7 @@ compile_plx_fn(FunctionCallInfo fcinfo, HeapTuple proc_tuple, bool is_validate)
         elog(ERROR, "Plexor functions must be volatile");
 
     plx_fn = new_plx_fn();
-    plx_fn->oid = HeapTupleGetOid(proc_tuple);
+    plx_fn->oid = proc_struct->oid;
     fill_plx_fn_name(plx_fn, proc_struct);
     fill_plx_fn_arg_types(plx_fn, proc_tuple);
     parse_plx_fn(plx_fn, proc_tuple);
