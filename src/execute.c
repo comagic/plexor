@@ -144,9 +144,14 @@ wait_for_result(PlxFn *plx_fn, PlxConn *plx_conn)
 
         if (geterrcode() == ERRCODE_QUERY_CANCELED)
             PQrequestCancel(pq_conn);
-        pg_result = PQgetResult(pq_conn);
-        if (pg_result)
+        // https://www.postgresql.org/docs/9.0/static/libpq-async.html
+        // "After successfully calling PQsendQuery, call PQgetResult
+        // __one or more times__ to obtain the results. PQsendQuery cannot be
+        // called again (on the same connection) until PQgetResult has returned
+        // a null pointer, indicating that the command is done."
+        while((pg_result = PQgetResult(pq_conn))) {
             PQclear(pg_result);
+        }
         PG_RE_THROW();
     }
     PG_END_TRY();
@@ -204,9 +209,9 @@ plx_send_query(PlxFn    *plx_fn,
                            arg_fmts,
                            plx_fn->is_binary))
     {
+        char *msg = pstrdup(PQerrorMessage(plx_conn->pq_conn));
         delete_plx_conn(plx_conn);
-        plx_error(plx_fn,
-                  "failed to send query %s %s", sql, PQerrorMessage(plx_conn->pq_conn));
+        plx_error(plx_fn, "failed to send query %s %s", sql, msg);
     }
     wait_for_flush(plx_fn, plx_conn->pq_conn);
 }

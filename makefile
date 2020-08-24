@@ -32,6 +32,7 @@ DATA_built  = $(EXT_SQL)
 SHLIB_LINK = -L$(PQLIB) -lpq
 
 #PG_CPPFLAGS = -std=c89
+PG_CPPFLAGS += -I$(PQINC)
 
 PG_CONFIG   = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
