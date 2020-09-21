@@ -1,6 +1,6 @@
 # plexor extension
 comment = 'Function call multiplexor procedural language'
-default_version = '2.2'
+default_version = '2.3'
 module_pathname = '$libdir/plexor'
 relocatable = false
 # schema = pg_catalog
