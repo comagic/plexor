@@ -44,6 +44,19 @@ PG_FUNCTION_INFO_V1(plexor_call_handler);
 PG_FUNCTION_INFO_V1(plexor_validator);
 
 
+static void plexor_sigterm_handler(SIGNAL_ARGS);
+static void (*prev_sigterm_handler)(int) = NULL;
+
+static void
+plexor_sigterm_handler(SIGNAL_ARGS)
+{
+    pqsignal(SIGTERM, prev_sigterm_handler);
+    elog(WARNING, "plexor: drop all connects by SIGTERM");
+    drop_all_connects();
+    if (prev_sigterm_handler)
+        prev_sigterm_handler(postgres_signal_arg);
+}
+
 static void
 plx_startup_init(void)
 {
@@ -55,6 +68,7 @@ plx_startup_init(void)
     plx_fn_cache_init();
     execute_init();
     srand(time(NULL));
+    prev_sigterm_handler = pqsignal(SIGTERM, plexor_sigterm_handler);
 
     initialized = true;
 }

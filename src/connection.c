@@ -237,3 +237,16 @@ get_plx_conn(PlxCluster *plx_cluster, int nnode)
     plx_conn_insert_cache(plx_conn);
     return plx_conn;
 }
+
+void
+drop_all_connects(){
+    HASH_SEQ_STATUS   scan;
+    PlxConnHashEntry *entry = NULL;
+
+    hash_seq_init(&scan, plx_conn_cache);
+    while ((entry = (PlxConnHashEntry *) hash_seq_search(&scan)))
+    {
+        elog(WARNING, "plexor: drop connect %s", entry->plx_conn->dsn);
+        delete_plx_conn(entry->plx_conn);
+    }
+}

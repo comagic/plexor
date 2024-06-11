@@ -116,6 +116,7 @@ wait_for_result(PlxFn *plx_fn, PlxConn *plx_conn)
     struct epoll_event  event;
     PGconn             *pq_conn   = plx_conn->pq_conn;
     PGresult           *pg_result = NULL;
+    int nfds;
 
     listenev.events = EPOLLIN;
     listenev.data.fd = PQsocket(pq_conn);
@@ -135,7 +136,10 @@ wait_for_result(PlxFn *plx_fn, PlxConn *plx_conn)
                 plx_error(plx_fn, "%s", PQerrorMessage(pq_conn));
             }
             CHECK_FOR_INTERRUPTS();
-            epoll_wait(epoll_fd, &event, 1, 10000);
+            nfds = epoll_wait(epoll_fd, &event, 1, 10000);
+            if (nfds == -1){
+                CHECK_FOR_INTERRUPTS();
+            }
         }
     }
     PG_CATCH();
