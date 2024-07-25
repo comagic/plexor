@@ -239,7 +239,7 @@ Datum get_next_row(FunctionCallInfo fcinfo);
 void     plx_conn_cache_init(void);
 PlxConn *get_plx_conn(PlxCluster *plx_cluster, int nnode);
 void     delete_plx_conn(PlxConn *plx_conn);
-void     drop_all_connects();
+void     drop_all_connects(void);
 
 /* transaction.c */
 void start_transaction(PlxConn* plx_conn);

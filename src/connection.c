@@ -239,7 +239,8 @@ get_plx_conn(PlxCluster *plx_cluster, int nnode)
 }
 
 void
-drop_all_connects(){
+drop_all_connects(void)
+{
     HASH_SEQ_STATUS   scan;
     PlxConnHashEntry *entry = NULL;
 
