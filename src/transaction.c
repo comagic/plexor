@@ -127,7 +127,14 @@ xact_callback(XactEvent event, void *arg)
             PGresult       *pg_result = PQexec(plx_conn->pq_conn, sql);
             ExecStatusType  status    = PQresultStatus(pg_result);
 
-            if (
+            if (status == PGRES_FATAL_ERROR)
+            {
+                ereport(
+                    FATAL,
+                    (errmsg("A fatal error occurred: %s", PQerrorMessage(plx_conn->pq_conn)))
+                );
+            }
+            else if (
                 status != PGRES_TUPLES_OK &&
                 status != PGRES_COMMAND_OK &&
                 status != PGRES_COPY_IN &&
